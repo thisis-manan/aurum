@@ -1,13 +1,16 @@
+/* Google Fonts fallback for Canela / NHaasGrotesk — @import must precede all rules */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Inter:wght@300;400&display=swap');
+
 /* ============================================================
    AURUM — globals.css
    THE SINGLE SOURCE OF TRUTH FOR ALL DESIGN TOKENS
-   
+
    HOW TO USE:
    In any .module.css file, write:
      color: var(--color-ink);
      font-family: var(--font-display);
      padding: var(--space-section);
-   
+
    NEVER write:
      color: #1a1a1a;      ← hardcoded, impossible to change globally
      font-family: serif;  ← vague, inconsistent
@@ -23,9 +26,6 @@
   font-style: normal;
   font-display: swap;
 }
-
-/* If you don't have Canela, use this Google Fonts fallback: */
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Inter:wght@300;400&display=swap');
 
 @font-face {
   font-family: 'NHaasGrotesk';
