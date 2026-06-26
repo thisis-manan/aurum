@@ -1,32 +1,59 @@
-import type { Product } from '@/types'
+import { Product, Category } from '../types'
 
 export const PRODUCTS: Product[] = [
   {
-    id: '1',
+    id: 'p1',
     name: 'Soleil Ring',
+    price: '₹ 48,000',
+    imageUrl: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600',
     category: 'Rings',
-    price: 48000,
-    image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=400&q=80',
   },
   {
-    id: '2',
+    id: 'p2',
     name: 'Arc Pendant',
+    price: '₹ 62,000',
+    imageUrl: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600',
     category: 'Necklaces',
-    price: 62000,
-    image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&q=80',
   },
   {
-    id: '3',
-    name: 'Meridian Bracelet',
+    id: 'p3',
+    name: 'Meridian Cuff',
+    price: '₹ 35,000',
+    imageUrl: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600',
     category: 'Bracelets',
-    price: 35000,
-    image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=400&q=80',
   },
   {
-    id: '4',
-    name: 'Veil Necklace',
-    category: 'Necklaces',
-    price: 28500,
-    image: 'https://images.unsplash.com/photo-1589128777073-263566ae5e4d?w=400&q=80',
+    id: 'p4',
+    name: 'Veil Earrings',
+    price: '₹ 28,500',
+    imageUrl: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600',
+    category: 'Earrings',
+  },
+]
+
+export const CATEGORIES: Category[] = [
+  {
+    id: 'c1',
+    label: 'Rings',
+    imageUrl: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800',
+    href: '/rings',
+  },
+  {
+    id: 'c2',
+    label: 'Necklaces',
+    imageUrl: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800',
+    href: '/necklaces',
+  },
+  {
+    id: 'c3',
+    label: 'Bracelets',
+    imageUrl: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800',
+    href: '/bracelets',
+  },
+  {
+    id: 'c4',
+    label: 'Earrings',
+    imageUrl: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800',
+    href: '/earrings',
   },
 ]

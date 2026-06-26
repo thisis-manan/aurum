@@ -13,12 +13,14 @@ function App() {
   return (
     <>
       <Nav />
+
       <main>
         <Hero />
         <CategoryGrid />
         <ProductShowcase />
         <Carousel />
       </main>
+
       <Footer />
     </>
   )
