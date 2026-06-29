@@ -32,7 +32,7 @@
   color: var(--text-primary);
   letter-spacing: var(--tracking-display);
   line-height: 0.95;
-  margin: 0;
+  margin: 0 0 var(--space-4);
 }
 
 .dragLabel {
@@ -48,13 +48,15 @@
 /* ── Track ──────────────────────────────────────── */
 
 .track {
+  --slide-w: clamp(300px, 70vw, 900px);
   display: flex;
   gap: 24px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
-  padding: 0 var(--container-padding);
+  /* Side padding lets the first/last slide scroll all the way to the centre */
+  padding: 0 max(var(--container-padding), calc((100% - var(--slide-w)) / 2));
   cursor: grab;
   user-select: none;
   -ms-overflow-style: none;
@@ -74,16 +76,25 @@
 /* ── Slides ─────────────────────────────────────── */
 
 .slide {
-  flex: 0 0 clamp(300px, 70vw, 900px);
+  flex: 0 0 var(--slide-w);
   aspect-ratio: 16 / 9;
   position: relative;
   overflow: hidden;
-  scroll-snap-align: start;
+  scroll-snap-align: center;
+  transform-origin: center;
+  transition: transform var(--duration-base) var(--ease-luxury),
+              opacity   var(--duration-base) var(--ease-luxury);
+}
+
+/* Slides not in view shrink and dim so the focused slide expands */
+.slide.dimmed {
+  transform: scale(0.95);
+  opacity: 0.8;
 }
 
 @media (max-width: 768px) {
-  .slide {
-    flex: 0 0 85vw;
+  .track {
+    --slide-w: 85vw;
   }
 }
 
@@ -119,34 +130,34 @@
 
 .slideName {
   font-family: var(--font-display);
-  font-size: var(--text-heading);
+  font-size: clamp(32px, 4vw, 56px);
   font-weight: 300;
   color: var(--text-on-dark);
   letter-spacing: var(--tracking-display);
   line-height: 1.1;
-  margin: 0 0 var(--space-1);
+  margin: 0 0 var(--space-2);
   display: block;
 }
 
 .slideSubtitle {
   font-family: var(--font-body);
-  font-size: var(--text-micro);
+  font-size: var(--text-small);
   font-weight: 400;
   letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
   color: var(--text-on-dark);
-  opacity: 0.65;
+  opacity: 0.8;
   margin: 0;
   display: block;
 }
 
 /* ── Footer ─────────────────────────────────────── */
 
-.footer {
+.footerControls {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-5) var(--container-padding) 0;
+  padding-top: var(--space-4);
 }
 
 .dots {

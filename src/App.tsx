@@ -7,16 +7,20 @@ import Footer from './components/Footer/Footer'
 import { useLenis } from './hooks/useLenis'
 
 function App() {
+  // Initialize smooth scrolling for the entire site
   useLenis()
+
   return (
     <>
       <Nav />
+
       <main>
         <Hero />
         <CategoryGrid />
         <ProductShowcase />
         <Carousel />
       </main>
+
       <Footer />
     </>
   )
