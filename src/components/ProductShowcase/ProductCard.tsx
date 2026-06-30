@@ -6,10 +6,10 @@ export default function ProductCard({ product }: { product: Product }) {
     <div className={styles.productCard}>
       <div className={styles.imageContainer}>
         <img
-          src={product.image}
-          alt={product.name}
-          className={styles.productImage}
-        />
+  src={product.imageUrl}
+  alt={product.name}
+  className={styles.productImage}
+/>
         <button className={styles.quickAdd}>Quick Add</button>
       </div>
 

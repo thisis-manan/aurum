@@ -117,8 +117,8 @@
    ============================================================ */
   --max-width: 1440px;
   --container-padding: clamp(24px, 5vw, 80px);
-  --grid-columns:      12;
-  --grid-gap:          clamp(16px, 2vw, 32px);
+  --grid-columns: 12;
+  --grid-gap: clamp(16px, 2vw, 32px);
   --product-grid-columns: repeat(auto-fill, minmax(280px, 1fr));
 
   /* ============================================================
