@@ -1,5 +1,5 @@
 import styles from './Footer.module.css'
-import { useScrollAnimation } from '@/hooks/useScrollAnimation'
+import { useScrollAnimation } from '../../hooks/useScrollAnimation'
 
 export default function Footer() {
   const ref = useScrollAnimation()

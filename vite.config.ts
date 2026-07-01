@@ -9,4 +9,8 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    // This allows ngrok (and other tunnels) to access your local server
+    allowedHosts: true, 
+  }
 })
