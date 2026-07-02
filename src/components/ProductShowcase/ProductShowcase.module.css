@@ -63,17 +63,35 @@
 }
 
 .scrollWrapper {
-  overflow-x: auto;
+  overflow-x: hidden;
   overflow-y: visible;
-  padding: 20px 0 44px;
-  scrollbar-width: thin;
+  padding: 300px 0 330px;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
+  perspective: 1400px;
+}
+
+.scrollWrapper.dragging {
+  cursor: grabbing;
 }
 
 .grid {
   display: flex;
-  gap: var(--grid-gap);
-  padding: 0 var(--container-padding);
+  align-items: center;
+  gap: clamp(30px, 4vw, 90px);
+  padding: 0 20vw;
   width: max-content;
+  will-change: transform;
+}
+
+/* Outer slot that receives the dynamic per-frame wheel transform
+   (rotateY / arc / scale / opacity) — kept separate from the card's
+   own subtle static tilt so the two never fight each other. */
+.wheelCardSlot {
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
 }
 
 .productCard {
@@ -168,24 +186,33 @@
   will-change: transform;
 }
 
+/* ── Gallery reveal — scattered polaroid tilt that
+   slides/fades/scales up into place on scroll ── */
+
+.galleryCard {
+  transform: rotate(var(--card-rot, 0deg));
+}
+
 .galleryCard .imageContainer {
-  clip-path: inset(0 0 100% 0);
   opacity: 0;
-  transform: scale(1.1);
-  transition: clip-path 1s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.7s ease-out,
-              transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(70px) scale(0.94);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .galleryCard.revealed .imageContainer {
-  clip-path: inset(0 0 0% 0);
   opacity: 1;
-  transform: scale(1);
+  transform: translateY(0) scale(1);
 }
 
-/* ── Bold 3D tilt + flip hover for Bracelets & Earrings ──
-   Deliberately different from .parallaxCard: instead of translateY on
-   scroll, this card tilts toward the cursor and flips to reveal price. */
+.galleryCard.revealed {
+  transform: rotate(0deg);
+  transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Bold 3D tilt + flip hover for all gallery cards ──
+   Instead of translateY on scroll, this card tilts toward
+   the cursor and flips to reveal price. */
 
 .tiltCard {
   position: relative;
@@ -291,5 +318,41 @@
   }
   .tiltBack {
     display: none;
+  }
+}
+
+/* ── Masonry stagger — cards sit at different heights so the row
+   reads like a scattered gallery instead of a flat line, matching
+   the meech213-style layout (Rings / Necklaces). Movement itself
+   comes from the drag-to-slide handlers in ProductShowcase.tsx. ── */
+
+.slideCard {
+  transform: translateY(var(--stagger-y, 0px)) rotate(var(--card-rot, 0deg));
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.slideCard .imageContainer {
+  border-radius: 0;
+  box-shadow:
+    4px 6px 0 -1px rgba(0, 0, 0, 0.05),
+    1px 2px 6px -1px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .slideCard {
+    transform: translateY(calc(var(--stagger-y, 0px) * 0.6)) rotate(calc(var(--card-rot, 0deg) * 0.6));
+  }
+}
+
+@media (max-width: 640px) {
+  .slideCard {
+    transform: translateY(calc(var(--stagger-y, 0px) * 0.6)) rotate(calc(var(--card-rot, 0deg) * 0.5));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slideCard {
+    transform: translateY(var(--stagger-y, 0px));
   }
 }

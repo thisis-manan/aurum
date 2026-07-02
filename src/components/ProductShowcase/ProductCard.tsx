@@ -1,8 +1,8 @@
 import type { Product } from '@/types'
-import ParallaxProductCard from './ParallaxProductCard'
+import SlideProductCard from './SlideProductCard'
 import GalleryProductCard from './GalleryProductCard'
 
-const PARALLAX_CATEGORIES = ['Rings', 'Necklaces']
+const SLIDE_REVEAL_CATEGORIES = ['Rings', 'Necklaces']
 
 export default function ProductCard({
   product,
@@ -11,8 +11,8 @@ export default function ProductCard({
   product: Product
   index?: number
 }) {
-  if (PARALLAX_CATEGORIES.includes(product.category)) {
-    return <ParallaxProductCard product={product} />
+  if (SLIDE_REVEAL_CATEGORIES.includes(product.category)) {
+    return <SlideProductCard product={product} index={index} />
   }
   return <GalleryProductCard product={product} index={index} />
 }

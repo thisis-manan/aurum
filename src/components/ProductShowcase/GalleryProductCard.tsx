@@ -17,6 +17,9 @@ export default function GalleryProductCard({
   const [tilt, setTilt] = useState({ rx: 0, ry: 0, gx: 50, gy: 50 })
   const [flipped, setFlipped] = useState(false)
 
+  // deterministic scatter angle per card, -4deg to +4deg, differs by index
+  const scatterRotation = ((index * 37) % 9) - 4
+
   function handleMouseMove(e: MouseEvent<HTMLDivElement>) {
     const el = tiltRef.current
     if (!el) return
@@ -44,10 +47,15 @@ export default function GalleryProductCard({
     '--gy': `${tilt.gy}%`,
   } as CSSProperties
 
+  const cardVars = {
+    '--card-rot': `${scatterRotation}deg`,
+  } as CSSProperties
+
   return (
     <div
       ref={ref}
       className={`${styles.productCard} ${styles.galleryCard} ${revealed ? styles.revealed : ''}`}
+      style={cardVars}
     >
       <div
         ref={tiltRef}
