@@ -1,26 +1,22 @@
 import Nav from './components/Nav/Nav'
 import Hero from './components/Hero/Hero'
-import CategoryGrid from './components/CategoryGrid/CategoryGrid'
-import ProductShowcase from './components/ProductShowcase/ProductShowcase'
-import Carousel from './components/Carousel/Carousel'
+import DomeGallery from './components/Gallery/DomeGallery'
 import Footer from './components/Footer/Footer'
 import { useLenis } from './hooks/useLenis'
 
+// Single-page AURUM layout, top to bottom:
+//   Nav + Hero   → the fixed nav over the full-screen hero
+//   DomeGallery  → the WebGL photo dome (centrepiece, drag to explore)
+//   Footer       → closing footer
 function App() {
-  // Initialize smooth scrolling for the entire site
+  // Smooth scrolling for the whole page
   useLenis()
 
   return (
     <>
       <Nav />
-
-      <main>
-        <Hero />
-        <CategoryGrid />
-        <ProductShowcase />
-        <Carousel />
-      </main>
-
+      <Hero />
+      <DomeGallery />
       <Footer />
     </>
   )

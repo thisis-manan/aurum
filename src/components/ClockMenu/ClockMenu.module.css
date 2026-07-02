@@ -1,0 +1,235 @@
+/* ============================================================
+   ClockMenu — radial "clock" dial nav ported from meech213.com.
+   The shared bottom-centre navigation: page names arc around a dial
+   anchored at the bottom, the active page bright with the clock hand
+   pointing at it, plus per-page subnav. CSS lifted from the original.
+   ============================================================ */
+.clockMenu {
+  --menu-ink: rgba(20, 18, 18, 0.94);
+  --menu-muted: rgba(20, 18, 18, 0.4);
+  --menu-line: rgba(20, 18, 18, 0.42);
+  --menu-shadow: rgba(23, 21, 18, 0.08);
+  --menu-page-opacity: 1;
+  --menu-category-opacity: 0;
+
+  width: min(100%, 1100px);
+  margin-inline: auto;
+  font-family: 'articulat-cf', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  /* Only the links catch pointer events, so the dial never blocks the page
+     behind it (mirrors the original footer's pointer-events rules). */
+  pointer-events: none;
+}
+
+.primaryLink,
+.subnavLink {
+  pointer-events: auto;
+}
+
+.viewport {
+  --dial-width: min(80vw, 800px);
+  --dial-height: min(40vw, 400px);
+  position: relative;
+  width: var(--dial-width);
+  height: var(--dial-height);
+  margin: 0 auto;
+  isolation: isolate;
+  transform-origin: center bottom;
+}
+
+.viewport::before {
+  content: '';
+  position: absolute;
+  inset: 22% 14% auto;
+  height: 42%;
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.045), transparent 72%);
+  filter: blur(26px);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.dial {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  --slot-left: 50%;
+  --slot-top: 50%;
+  --slot-opacity: 0.4;
+  --slot-scale: 0.97;
+  --slot-layer: 2;
+  position: absolute;
+  top: var(--slot-top);
+  left: var(--slot-left);
+  margin: 0;
+  opacity: var(--slot-opacity);
+  z-index: var(--slot-layer);
+  transform: translate(-50%, -50%) scale(var(--slot-scale));
+  white-space: nowrap;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: opacity 320ms ease, transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.item[data-active='true'] {
+  --slot-scale: 1;
+  opacity: 1;
+  z-index: 3;
+  filter: drop-shadow(0 10px 18px var(--menu-shadow));
+}
+
+.primaryLink {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--menu-muted);
+  font: inherit;
+  font-size: 2rem;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 240ms ease, opacity 240ms ease, filter 240ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.primaryLink:hover {
+  color: rgba(20, 18, 18, 0.68);
+}
+
+.item[data-active='true'] .primaryLink {
+  color: var(--menu-ink);
+}
+
+/* --- Subnav (appears beside the active item) --- */
+.subnavPanel {
+  position: absolute;
+  left: calc(100% + 1rem);
+  top: 50%;
+  display: flex;
+  align-items: center;
+  gap: 0.95rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-46%);
+  transition: opacity 240ms ease;
+  z-index: 4;
+}
+
+.item[data-active='true'] .subnavPanel {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.subnavItem {
+  margin: 0;
+  padding: 0;
+}
+
+.subnavLink {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--menu-muted);
+  font: inherit;
+  font-size: 0.85rem;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 200ms ease;
+}
+
+.subnavLink:hover {
+  color: var(--menu-ink);
+}
+
+/* --- Clock hand + pin, anchored at the dial centre (50%, 84%) --- */
+.clock {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.hand,
+.pin {
+  position: absolute;
+  left: 50%;
+  top: 84%;
+  transform-origin: 0 50%;
+  border-radius: 999px;
+}
+
+.hand {
+  height: 1px;
+  background: var(--menu-line);
+  box-shadow: 0 0 0 0.4px rgba(20, 18, 18, 0.18);
+  /* Sweep to the active page's slot (--aim, in degrees) */
+  transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* --aim points straight at the active slot; the two hands fan out slightly. */
+.handHour {
+  width: 4.5rem;
+  transform: translateY(-50%) rotate(calc((var(--aim, -34) - 5) * 1deg));
+}
+
+.handMinute {
+  width: 8rem;
+  transform: translateY(-50%) rotate(calc((var(--aim, -34) + 5) * 1deg));
+  opacity: 0.86;
+}
+
+.pin {
+  width: 0.28rem;
+  height: 0.28rem;
+  transform: translate(-50%, -50%);
+  background: rgba(20, 18, 18, 0.6);
+}
+
+@media (max-width: 767px) {
+  .viewport {
+    --dial-width: 96vw;
+    --dial-height: 48vw;
+  }
+  .primaryLink {
+    font-size: 1.5rem;
+  }
+  .subnavPanel {
+    left: calc(100% + 0.75rem);
+    top: auto;
+    bottom: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+    transform: none;
+  }
+  .subnavLink {
+    font-size: 0.75rem;
+  }
+  .handHour {
+    width: 2.5rem;
+  }
+  .handMinute {
+    width: 5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item {
+    transition: none;
+  }
+}

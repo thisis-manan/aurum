@@ -216,11 +216,11 @@ button {
   width: 100%;
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 0 var(--container-padding);
+  padding-inline: var(--container-padding);
 }
 
 .section {
-  padding: var(--space-section) 0;
+  padding-block: var(--space-section);
 }
 
 .eyebrow {
