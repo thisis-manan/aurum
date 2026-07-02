@@ -1,15 +1,14 @@
 .section {
-  padding: var(--space-section) 0;
+  padding: 16px 0 24px;
 }
 
-/* ── Header ── */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-3);
   padding: 0 var(--container-padding);
-  padding-bottom: var(--space-4);
+  padding-bottom: var(--space-2);
   border-bottom: 1px solid var(--border-default);
 }
 
@@ -32,7 +31,6 @@
   margin-top: var(--space-1);
 }
 
-/* ── Filter tabs ── */
 .filters {
   display: flex;
   gap: var(--space-4);
@@ -64,21 +62,45 @@
   border-bottom: 2px solid var(--text-accent);
 }
 
-/* ── Grid ── */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: var(--grid-gap);
-  padding: 0 var(--container-padding);
+.scrollWrapper {
+  overflow-x: hidden;
+  overflow-y: visible;
+  padding: 300px 0 330px;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
+  perspective: 1400px;
 }
 
-/* ── Card ── */
+.scrollWrapper.dragging {
+  cursor: grabbing;
+}
+
+.grid {
+  display: flex;
+  align-items: center;
+  gap: clamp(30px, 4vw, 90px);
+  padding: 0 20vw;
+  width: max-content;
+  will-change: transform;
+}
+
+/* Outer slot that receives the dynamic per-frame wheel transform
+   (rotateY / arc / scale / opacity) — kept separate from the card's
+   own subtle static tilt so the two never fight each other. */
+.wheelCardSlot {
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+}
+
 .productCard {
   background: transparent;
   cursor: pointer;
+  width: 300px;
+  flex: 0 0 auto;
 }
 
-/* ── Image ── */
 .imageContainer {
   position: relative;
   aspect-ratio: 3 / 4;
@@ -98,7 +120,6 @@
   transform: scale(1.04);
 }
 
-/* ── Quick Add button ── */
 .quickAdd {
   position: absolute;
   bottom: 0;
@@ -123,7 +144,6 @@
   transform: translateY(0);
 }
 
-/* ── Text below image ── */
 .categoryLabel {
   display: block;
   font-family: var(--font-body);
@@ -149,13 +169,6 @@
   margin-top: var(--space-1);
 }
 
-/* ── Responsive ── */
-@media (max-width: 1024px) {
-  .grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
 @media (max-width: 640px) {
   .header {
     flex-direction: column;
@@ -163,7 +176,183 @@
     gap: var(--space-3);
   }
 
-  .grid {
-    grid-template-columns: repeat(1, 1fr);
+  .productCard {
+    width: 230px;
+  }
+}
+
+.parallaxCard {
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  will-change: transform;
+}
+
+/* ── Gallery reveal — scattered polaroid tilt that
+   slides/fades/scales up into place on scroll ── */
+
+.galleryCard {
+  transform: rotate(var(--card-rot, 0deg));
+}
+
+.galleryCard .imageContainer {
+  opacity: 0;
+  transform: translateY(70px) scale(0.94);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.galleryCard.revealed .imageContainer {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.galleryCard.revealed {
+  transform: rotate(0deg);
+  transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── Bold 3D tilt + flip hover for all gallery cards ──
+   Instead of translateY on scroll, this card tilts toward
+   the cursor and flips to reveal price. */
+
+.tiltCard {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  perspective: 1200px;
+  cursor: pointer;
+  margin-bottom: var(--space-2);
+}
+
+.tiltInner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.tiltInner.tiltFlipped {
+  transform: rotateX(var(--rx, 0deg)) rotateY(calc(var(--ry, 0deg) + 180deg));
+  transition: transform var(--duration-slow) var(--ease-luxury);
+}
+
+.tiltFace {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+
+.tiltFront .productImage {
+  width: 100%;
+  height: 100%;
+}
+
+.tiltSheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at var(--gx, 50%) var(--gy, 50%),
+    color-mix(in srgb, var(--text-accent) 35%, transparent),
+    transparent 45%
+  );
+  mix-blend-mode: overlay;
+}
+
+.tiltBack {
+  transform: rotateY(180deg);
+  background: var(--color-ink);
+  color: var(--color-parchment);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-3);
+}
+
+.tiltBack .categoryLabel {
+  color: var(--text-accent);
+}
+
+.tiltBackName {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: var(--text-body);
+  color: var(--color-parchment);
+  margin: 0;
+  line-height: 1.15;
+}
+
+.tiltBackPrice {
+  font-family: var(--font-body);
+  font-size: var(--text-small);
+  color: var(--text-accent);
+  margin: 0 0 var(--space-2);
+}
+
+.tiltBackCta {
+  all: unset;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: var(--text-micro);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--color-ink);
+  background: var(--text-accent);
+  padding: var(--space-1) var(--space-3);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.tiltBackCta:hover {
+  transform: scale(1.05);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tiltInner,
+  .tiltInner.tiltFlipped {
+    transition: none;
+    transform: none !important;
+  }
+  .tiltBack {
+    display: none;
+  }
+}
+
+/* ── Masonry stagger — cards sit at different heights so the row
+   reads like a scattered gallery instead of a flat line, matching
+   the meech213-style layout (Rings / Necklaces). Movement itself
+   comes from the drag-to-slide handlers in ProductShowcase.tsx. ── */
+
+.slideCard {
+  transform: translateY(var(--stagger-y, 0px)) rotate(var(--card-rot, 0deg));
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.slideCard .imageContainer {
+  border-radius: 0;
+  box-shadow:
+    4px 6px 0 -1px rgba(0, 0, 0, 0.05),
+    1px 2px 6px -1px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .slideCard {
+    transform: translateY(calc(var(--stagger-y, 0px) * 0.6)) rotate(calc(var(--card-rot, 0deg) * 0.6));
+  }
+}
+
+@media (max-width: 640px) {
+  .slideCard {
+    transform: translateY(calc(var(--stagger-y, 0px) * 0.6)) rotate(calc(var(--card-rot, 0deg) * 0.5));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slideCard {
+    transform: translateY(var(--stagger-y, 0px));
   }
 }
