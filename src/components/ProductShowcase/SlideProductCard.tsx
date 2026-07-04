@@ -2,10 +2,6 @@ import type { CSSProperties } from 'react'
 import type { Product } from '@/types'
 import styles from './ProductShowcase.module.css'
 
-// The circular "wheel" rotation (inward rotateY) is applied
-// dynamically in ProductShowcase.tsx based on each card's position —
-// that is the only source of tilt here. No static tilt/stagger, so
-// nothing fights it.
 const WIDTH_VARIANTS = [300, 360, 270, 340, 310, 350]
 const ASPECT_VARIANTS = ['3 / 4.6', '4 / 5.8', '1 / 1.4', '3 / 5', '1 / 1.3', '4 / 6']
 
