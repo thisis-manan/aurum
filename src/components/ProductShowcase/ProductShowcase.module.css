@@ -187,8 +187,7 @@
   will-change: transform;
 }
 
-/* ── Gallery reveal — scattered polaroid tilt that
-   slides/fades/scales up into place on scroll ── */
+
 
 .galleryCard {
   transform: rotate(var(--card-rot, 0deg));
