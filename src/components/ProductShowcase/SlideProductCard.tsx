@@ -2,24 +2,14 @@ import type { CSSProperties } from 'react'
 import type { Product } from '@/types'
 import styles from './ProductShowcase.module.css'
 
-// The big "circular wheel" motion (rotateY, arc, scale, fade) is
-// applied dynamically per-frame in ProductShowcase.tsx based on
-// scroll position. On top of that, each card gets a strong static
-// tilt + a big vertical stagger so the row reads like a cascading,
-// scattered gallery — the next card's image starts roughly at the
-// halfway point of the previous one, not lined up in a flat row.
-const ROTATIONS = [-9, 7, -6, 11, -8, 5, -12, 8]
-const STAGGER_Y = [0, 230, -190, 260, -240, 200, -270, 210]
-
+// The circular "wheel" rotation (inward rotateY) is applied
+// dynamically in ProductShowcase.tsx based on each card's position —
+// that is the only source of tilt here. No static tilt/stagger, so
+// nothing fights it.
 const WIDTH_VARIANTS = [300, 360, 270, 340, 310, 350]
 const ASPECT_VARIANTS = ['3 / 4.6', '4 / 5.8', '1 / 1.4', '3 / 5', '1 / 1.3', '4 / 6']
 
-// The biggest card in the width lineup — keep these standing straight
-// instead of tilted like the rest, with just a soft, subtle bend
-// (a couple degrees, pivoting from the card's own center) rather
-// than a full corner-to-corner diagonal tilt.
 const BIGGEST_WIDTH = Math.max(...WIDTH_VARIANTS)
-const BIG_CARD_BEND = 1.5
 
 export default function DragProductCard({
   product,
@@ -29,16 +19,11 @@ export default function DragProductCard({
   index?: number
 }) {
   const width = WIDTH_VARIANTS[(index * 3 + 1) % WIDTH_VARIANTS.length]
-  const isBiggest = width === BIGGEST_WIDTH
-  const rotation = isBiggest
-    ? (index % 2 === 0 ? -BIG_CARD_BEND : BIG_CARD_BEND)
-    : ROTATIONS[index % ROTATIONS.length]
-  const staggerY = STAGGER_Y[index % STAGGER_Y.length]
   const aspect = ASPECT_VARIANTS[(index * 2 + 2) % ASPECT_VARIANTS.length]
 
   const cardVars = {
-    '--card-rot': `${rotation}deg`,
-    '--stagger-y': `${staggerY}px`,
+    '--card-rot': '0deg',
+    '--stagger-y': '0px',
     width: `${width}px`,
   } as CSSProperties
 

@@ -65,12 +65,12 @@
 .scrollWrapper {
   overflow-x: hidden;
   overflow-y: visible;
-  padding: 300px 0 330px;
+  padding: 40px 0 60px;
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
   touch-action: pan-y;
-  perspective: 1400px;
+  perspective: 1000px;
 }
 
 .scrollWrapper.dragging {
@@ -80,10 +80,11 @@
 .grid {
   display: flex;
   align-items: center;
-  gap: clamp(30px, 4vw, 90px);
+  gap: clamp(70px, 7vw, 150px);
   padding: 0 20vw;
   width: max-content;
   will-change: transform;
+  transform-style: preserve-3d;
 }
 
 /* Outer slot that receives the dynamic per-frame wheel transform
