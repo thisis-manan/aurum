@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback, useLayoutEffect } from 'react'
 import { PRODUCTS } from '@/data/products'
 import type { Product } from '@/types'
 import ProductCard from './SlideProductCard'
@@ -13,7 +13,7 @@ const MAX_VELOCITY = 35
 const VELOCITY_SAMPLE_WINDOW = 120
 
 const MAX_ROTATE_Y = 62
-const ARC_HEIGHT = 0 
+const ARC_HEIGHT = 0
 
 const EDGE_CLONE_COUNT = 3
 
@@ -42,7 +42,7 @@ export default function ProductShowcase() {
       ? PRODUCTS
       : PRODUCTS.filter((p) => p.category === activeFilter)
 
-  
+
   const displayItems: (Product & { _slotKey: string })[] =
     filtered.length > EDGE_CLONE_COUNT
       ? [
@@ -64,7 +64,7 @@ export default function ProductShowcase() {
     )
   }, [])
 
-  
+
   const applyWheelTransforms = useCallback(() => {
     const wrapper = wrapperRef.current
     if (!wrapper) return
@@ -88,6 +88,17 @@ export default function ProductShowcase() {
     })
   }, [])
 
+  // Moves the grid itself to `current.current`. This is what tick()
+  // does every frame during drag/inertia, but nothing applied it on
+  // first mount — so the grid stayed visually at position 0 while the
+  // per-card rotation/tilt was already computed for the intended
+  // opening offset, causing the mismatched look on initial load.
+  const applyGridTransform = useCallback(() => {
+    const grid = gridRef.current
+    if (!grid) return
+    grid.style.transform = `translate3d(${-current.current}px, 0, 0)`
+  }, [])
+
   const tick = useCallback(() => {
     if (!isDragging.current) {
       if (Math.abs(velocity.current) > 0.05) {
@@ -100,10 +111,7 @@ export default function ProductShowcase() {
 
     current.current += (target.current - current.current) * LERP_EASE
 
-    const grid = gridRef.current
-    if (grid) {
-      grid.style.transform = `translate3d(${-current.current}px, 0, 0)`
-    }
+    applyGridTransform()
     applyWheelTransforms()
 
     const settled =
@@ -115,11 +123,11 @@ export default function ProductShowcase() {
       rafId.current = requestAnimationFrame(tick)
     } else {
       current.current = target.current
-      if (grid) grid.style.transform = `translate3d(${-current.current}px, 0, 0)`
+      applyGridTransform()
       applyWheelTransforms()
       rafId.current = null
     }
-  }, [applyWheelTransforms])
+  }, [applyWheelTransforms, applyGridTransform])
 
   const ensureLoop = useCallback(() => {
     if (rafId.current === null) {
@@ -127,7 +135,7 @@ export default function ProductShowcase() {
     }
   }, [tick])
 
-  
+
   const scrollToOpeningPosition = useCallback(() => {
     const realStartIndex = filtered.length > EDGE_CLONE_COUNT ? EDGE_CLONE_COUNT : 0
     const meta = cardMeta.current[realStartIndex]
@@ -138,16 +146,31 @@ export default function ProductShowcase() {
     current.current = offset
   }, [filtered.length])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     measure()
     scrollToOpeningPosition()
+    applyGridTransform()
     applyWheelTransforms()
     window.addEventListener('resize', measure)
+
+    const grid = gridRef.current
+    let ro: ResizeObserver | null = null
+    if (grid && typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(() => {
+        measure()
+        scrollToOpeningPosition()
+        applyGridTransform()
+        applyWheelTransforms()
+      })
+      ro.observe(grid)
+    }
+
     return () => {
       window.removeEventListener('resize', measure)
+      if (ro) ro.disconnect()
       if (rafId.current !== null) cancelAnimationFrame(rafId.current)
     }
-  }, [measure, applyWheelTransforms, scrollToOpeningPosition])
+  }, [measure, applyWheelTransforms, applyGridTransform, scrollToOpeningPosition])
 
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     const wrapper = wrapperRef.current
@@ -200,6 +223,7 @@ export default function ProductShowcase() {
     requestAnimationFrame(() => {
       measure()
       scrollToOpeningPosition()
+      applyGridTransform()
       applyWheelTransforms()
     })
   }
