@@ -3,22 +3,24 @@ import { PRODUCTS } from '@/data/products'
 import type { Product } from '@/types'
 import ProductCard from './SlideProductCard'
 import styles from './ProductShowcase.module.css'
+import { useSectionScrollLock } from './useSectionScrollLock'
 
 const FILTERS = ['All', 'Rings', 'Necklaces', 'Bracelets', 'Earrings']
 
 const LERP_EASE = 0.038
-const DRAG_SPEED = 0.75
 const FRICTION = 0.978
-const MAX_VELOCITY = 35
-const VELOCITY_SAMPLE_WINDOW = 120
+const SCROLL_TO_HORIZONTAL = 1.2
 
 const MAX_ROTATE_Y = 62
 const ARC_HEIGHT = 0
 
 const EDGE_CLONE_COUNT = 3
 
+const MIN_ITEMS_FOR_LOOP = EDGE_CLONE_COUNT * 2
+
 export default function ProductShowcase() {
   const [activeFilter, setActiveFilter] = useState('All')
+  const sectionRef = useRef<HTMLElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
   const cardRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -28,12 +30,7 @@ export default function ProductShowcase() {
   const target = useRef(0)
   const maxScroll = useRef(0)
   const rafId = useRef<number | null>(null)
-
-  const isDragging = useRef(false)
-  const startX = useRef(0)
-  const startTarget = useRef(0)
   const velocity = useRef(0)
-  const samples = useRef<{ x: number; t: number }[]>([])
 
   const clamp = (v: number) => Math.min(Math.max(v, 0), maxScroll.current)
 
@@ -42,9 +39,12 @@ export default function ProductShowcase() {
       ? PRODUCTS
       : PRODUCTS.filter((p) => p.category === activeFilter)
 
+  console.log('[catalog-debug]', { totalProducts: PRODUCTS.length, filteredCount: filtered.length, activeFilter })
+
+  const enableCarousel = filtered.length >= MIN_ITEMS_FOR_LOOP
 
   const displayItems: (Product & { _slotKey: string })[] =
-    filtered.length > EDGE_CLONE_COUNT
+    enableCarousel
       ? [
           ...filtered.slice(-EDGE_CLONE_COUNT).map((p) => ({ ...p, _slotKey: `head-clone-${p.id}` })),
           ...filtered.map((p) => ({ ...p, _slotKey: `real-${p.id}` })),
@@ -64,8 +64,8 @@ export default function ProductShowcase() {
     )
   }, [])
 
-
   const applyWheelTransforms = useCallback(() => {
+    if (!enableCarousel) return // static grid — no rotate/arc transform needed
     const wrapper = wrapperRef.current
     if (!wrapper) return
     const wrapperWidth = wrapper.clientWidth
@@ -86,13 +86,8 @@ export default function ProductShowcase() {
 
       el.style.transform = `translateY(${arcY}px) rotateY(${rotateY}deg)`
     })
-  }, [])
+  }, [enableCarousel])
 
-  // Moves the grid itself to `current.current`. This is what tick()
-  // does every frame during drag/inertia, but nothing applied it on
-  // first mount — so the grid stayed visually at position 0 while the
-  // per-card rotation/tilt was already computed for the intended
-  // opening offset, causing the mismatched look on initial load.
   const applyGridTransform = useCallback(() => {
     const grid = gridRef.current
     if (!grid) return
@@ -100,13 +95,11 @@ export default function ProductShowcase() {
   }, [])
 
   const tick = useCallback(() => {
-    if (!isDragging.current) {
-      if (Math.abs(velocity.current) > 0.05) {
-        target.current = clamp(target.current + velocity.current)
-        velocity.current *= FRICTION
-      } else {
-        velocity.current = 0
-      }
+    if (Math.abs(velocity.current) > 0.05) {
+      target.current = clamp(target.current + velocity.current)
+      velocity.current *= FRICTION
+    } else {
+      velocity.current = 0
     }
 
     current.current += (target.current - current.current) * LERP_EASE
@@ -115,7 +108,6 @@ export default function ProductShowcase() {
     applyWheelTransforms()
 
     const settled =
-      !isDragging.current &&
       Math.abs(velocity.current) < 0.05 &&
       Math.abs(target.current - current.current) < 0.05
 
@@ -135,12 +127,11 @@ export default function ProductShowcase() {
     }
   }, [tick])
 
-
   const scrollToOpeningPosition = useCallback(() => {
     const realStartIndex = filtered.length > EDGE_CLONE_COUNT ? EDGE_CLONE_COUNT : 0
     const meta = cardMeta.current[realStartIndex]
     if (!meta) return
-    const PEEK = 90 // px of the previous card left visible on load
+    const PEEK = 90
     const offset = clamp(meta.left - PEEK)
     target.current = offset
     current.current = offset
@@ -151,6 +142,7 @@ export default function ProductShowcase() {
     scrollToOpeningPosition()
     applyGridTransform()
     applyWheelTransforms()
+
     window.addEventListener('resize', measure)
 
     const grid = gridRef.current
@@ -171,51 +163,18 @@ export default function ProductShowcase() {
       if (rafId.current !== null) cancelAnimationFrame(rafId.current)
     }
   }, [measure, applyWheelTransforms, applyGridTransform, scrollToOpeningPosition])
-
-  const onPointerDown = useCallback((e: React.PointerEvent) => {
-    const wrapper = wrapperRef.current
-    if (!wrapper) return
-    isDragging.current = true
+  const onDelta = useCallback((dy: number) => {
     velocity.current = 0
-    startX.current = e.clientX
-    startTarget.current = target.current
-    samples.current = [{ x: e.clientX, t: performance.now() }]
-    wrapper.classList.add(styles.dragging)
-    wrapper.setPointerCapture(e.pointerId)
+    target.current = clamp(target.current + dy * SCROLL_TO_HORIZONTAL)
     ensureLoop()
   }, [ensureLoop])
 
-  const onPointerMove = useCallback((e: React.PointerEvent) => {
-    if (!isDragging.current) return
-    const dx = (e.clientX - startX.current) * DRAG_SPEED
-    target.current = clamp(startTarget.current - dx)
+  const getProgress = useCallback(() => ({
+    progress: target.current,
+    max: maxScroll.current,
+  }), [])
 
-    const now = performance.now()
-    samples.current.push({ x: e.clientX, t: now })
-    while (samples.current.length > 1 && now - samples.current[0].t > VELOCITY_SAMPLE_WINDOW) {
-      samples.current.shift()
-    }
-  }, [])
-
-  const endDrag = useCallback((e: React.PointerEvent) => {
-    const wrapper = wrapperRef.current
-    if (!wrapper || !isDragging.current) return
-    isDragging.current = false
-    wrapper.classList.remove(styles.dragging)
-    wrapper.releasePointerCapture(e.pointerId)
-
-    const buf = samples.current
-    if (buf.length >= 2) {
-      const first = buf[0]
-      const last = buf[buf.length - 1]
-      const dt = last.t - first.t
-      if (dt > 0) {
-        const raw = -((last.x - first.x) / dt) * 16 * DRAG_SPEED
-        velocity.current = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, raw))
-      }
-    }
-    ensureLoop()
-  }, [ensureLoop])
+  useSectionScrollLock({ sectionRef, onDelta, getProgress, enabled: enableCarousel })
 
   const handleFilter = (filter: string) => {
     setActiveFilter(filter)
@@ -229,7 +188,7 @@ export default function ProductShowcase() {
   }
 
   return (
-    <section className={`section container ${styles.section}`}>
+    <section ref={sectionRef} className={`section container ${styles.section}`}>
       <div className={styles.header}>
         <div>
           <h2 className={styles.title}>Our Pieces</h2>
@@ -249,15 +208,8 @@ export default function ProductShowcase() {
         </div>
       </div>
 
-      <div
-        className={styles.scrollWrapper}
-        ref={wrapperRef}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={endDrag}
-        onPointerLeave={endDrag}
-      >
-        <div className={styles.grid} ref={gridRef}>
+      <div className={styles.scrollWrapper} ref={wrapperRef}>
+        <div className={`${styles.grid} ${enableCarousel ? '' : styles.gridStatic}`} ref={gridRef}>
           {displayItems.map((product, index) => (
             <div
               key={product._slotKey}

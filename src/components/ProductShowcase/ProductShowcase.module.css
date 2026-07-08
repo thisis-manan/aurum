@@ -66,15 +66,7 @@
   overflow-x: hidden;
   overflow-y: visible;
   padding: 40px 0 60px;
-  cursor: grab;
-  user-select: none;
-  -webkit-user-select: none;
-  touch-action: pan-y;
   perspective: 1000px;
-}
-
-.scrollWrapper.dragging {
-  cursor: grabbing;
 }
 
 .grid {
@@ -86,11 +78,16 @@
   will-change: transform;
   transform-style: preserve-3d;
 }
+.gridStatic {
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+  padding: 0 var(--container-padding, 24px);
+  will-change: auto;
+}
 
-/* Outer slot that receives the dynamic per-frame wheel transform
-   (rotateY / arc / scale / opacity) — kept separate from the card's
-   own subtle static tilt so the two never fight each other. */
 .wheelCardSlot {
+  flex: 0 0 auto;
   transform-style: preserve-3d;
   will-change: transform, opacity;
 }
@@ -186,8 +183,6 @@
   transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
   will-change: transform;
 }
-
-
 
 .galleryCard {
   transform: rotate(var(--card-rot, 0deg));
@@ -320,12 +315,6 @@
     display: none;
   }
 }
-
-/* ── Masonry stagger — cards sit at different heights so the row
-   reads like a scattered gallery instead of a flat line, matching
-   the meech213-style layout (Rings / Necklaces). Movement itself
-   comes from the drag-to-slide handlers in ProductShowcase.tsx. ── */
-
 .slideCard {
   transform: translateY(var(--stagger-y, 0px)) rotate(var(--card-rot, 0deg));
   transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
@@ -337,12 +326,6 @@
     4px 6px 0 -1px rgba(0, 0, 0, 0.05),
     1px 2px 6px -1px rgba(0, 0, 0, 0.18);
   overflow: hidden;
-}
-
-@media (max-width: 640px) {
-  .slideCard {
-    transform: translateY(calc(var(--stagger-y, 0px) * 0.6)) rotate(calc(var(--card-rot, 0deg) * 0.6));
-  }
 }
 
 @media (max-width: 640px) {
