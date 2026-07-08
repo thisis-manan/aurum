@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Inter:wght@300;400&display=swap');
 
+
 /* ============================================================
    AURUM — globals.css
    THE SINGLE SOURCE OF TRUTH FOR ALL DESIGN TOKENS
@@ -33,6 +34,7 @@
   font-style: normal;
   font-display: swap;
 }
+
 
 /* ============================================================
    2. COLOUR PALETTE
