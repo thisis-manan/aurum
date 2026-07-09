@@ -175,12 +175,8 @@ export default function ProductShowcase() {
     max: maxScroll.current,
   }), [])
 
-  // Real painted bounds of the cards, including their CSS transforms
-  // (stagger translateY, rotate tilt, 3D rotateY, etc). The section's own
-  // getBoundingClientRect() does NOT grow to fit transformed children, so
-  // handing the lock hook the section rect alone caused it to dock the
-  // carousel too high/low and clip cards that visually sit above/below the
-  // section's untransformed box (e.g. rotated/staggered slideCards).
+
+  
   const getContentRect = useCallback(() => {
     const els = cardRefs.current.filter((el): el is HTMLDivElement => el !== null)
     if (els.length === 0) return null
