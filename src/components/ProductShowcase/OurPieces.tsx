@@ -1,1 +1,5 @@
-export { default } from './ProductShowcase'
+import ProductShowcase from './ProductShowcase'
+
+export default function OurPieces() {
+  return <ProductShowcase />
+}

@@ -65,15 +65,25 @@
 
 .scrollWrapper {
   overflow-x: auto;
-  overflow-y: visible;
-  scroll-snap-type: x mandatory;
+  overflow-y: hidden; /* Changed from visible to hidden to clamp bounding boxes neatly */
+  
+  /* CRITICAL FIX: Remove 'x mandatory' while using JavaScript wheel delta manipulation.
+     This stops the browser physics from fighting our manual transform computations.
+  */
+  scroll-snap-type: none; 
+  
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x;
   scrollbar-width: none;
   overscroll-behavior-x: contain;
   overscroll-behavior-y: auto;
-  padding: 40px 0 60px;
-  perspective: 1000px;
+  
+  /* Symmetric padding protecting rotated edge vectors from getting clipped */
+  padding: 60px 0; 
+  perspective: 1200px;
+  
+  /* Smooths out the manual JS momentum changes */
+  scroll-behavior: auto; 
 }
 
 .scrollWrapper::-webkit-scrollbar {
@@ -83,8 +93,11 @@
 .grid {
   display: flex;
   align-items: center;
-  gap: clamp(70px, 7vw, 150px);
-  padding: 0 20vw;
+  gap: clamp(40px, 5vw, 100px); /* Cleaned up spacing density */
+  
+  /* FIX: Perfect mathematical calculation to allow full-range snapping */
+  padding: 0 calc(50vw - 150px); 
+  
   width: max-content;
   transform-style: preserve-3d;
 }
@@ -181,8 +194,17 @@
   .productCard {
     width: 230px;
   }
+
+  /* FIX: Adjust geometric boundary padding to match responsive mobile card widths */
+  .grid {
+    padding: 0 calc(50vw - 115px);
+    gap: 30px;
+  }
 }
 
+/* ─────────────────────────────────────────────────────────────
+   Variations and Complex Animations (Stays Uniformly Untouched)
+   ───────────────────────────────────────────────────────────── */
 .parallaxCard {
   transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
   will-change: transform;
@@ -208,10 +230,6 @@
   transform: rotate(0deg);
   transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
-
-/* ── Bold 3D tilt + flip hover for all gallery cards ──
-   Instead of translateY on scroll, this card tilts toward
-   the cursor and flips to reveal price. */
 
 .tiltCard {
   position: relative;
@@ -319,6 +337,7 @@
     display: none;
   }
 }
+
 .slideCard {
   transform: translateY(var(--stagger-y, 0px)) rotate(var(--card-rot, 0deg));
   transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);

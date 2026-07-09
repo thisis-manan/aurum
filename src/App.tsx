@@ -2,7 +2,8 @@ import { useState } from 'react'
 import Nav from './components/Nav/Nav'
 import Hero from './components/Hero/Hero'
 import DomeGallery from './components/Gallery/DomeGallery'
-import OurPieces from './components/ProductShowcase/OurPieces'
+// Change the import to target your active 3D showcase file
+import ProductShowcase from './components/ProductShowcase/ProductShowcase' 
 import Footer from './components/Footer/Footer'
 import IntroOverlay from './components/Intro/IntroOverlay'
 import Intro from './components/Intro/Intro'
@@ -24,13 +25,14 @@ function App() {
         <Intro onComplete={() => setBootPhase('ready')} />
       )}
       
-      {/* CRITICAL FIX: Strictly mount the main site components ONLY when bootPhase is 'ready' */}
+      {/* Strictly mount main site components ONLY when bootPhase is 'ready' */}
       {bootPhase === 'ready' && (
         <CategoryProvider>
           <Nav />
           <Hero ready={bootPhase === 'ready'} />
           <DomeGallery />
-          <OurPieces />
+          {/* Swap the component instance here */}
+          <ProductShowcase /> 
           <Footer />
         </CategoryProvider>
       )}
