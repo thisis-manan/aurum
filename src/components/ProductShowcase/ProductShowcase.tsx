@@ -166,6 +166,7 @@ export default function ProductShowcase() {
   const onDelta = useCallback((dy: number) => {
     velocity.current = 0
     target.current = clamp(target.current + dy * SCROLL_TO_HORIZONTAL)
+    console.log('[carousel-debug]', { dy, target: target.current, current: current.current, maxScroll: maxScroll.current })
     ensureLoop()
   }, [ensureLoop])
 
@@ -174,7 +175,34 @@ export default function ProductShowcase() {
     max: maxScroll.current,
   }), [])
 
-  useSectionScrollLock({ sectionRef, onDelta, getProgress, enabled: enableCarousel })
+  // Real painted bounds of the cards, including their CSS transforms
+  // (stagger translateY, rotate tilt, 3D rotateY, etc). The section's own
+  // getBoundingClientRect() does NOT grow to fit transformed children, so
+  // handing the lock hook the section rect alone caused it to dock the
+  // carousel too high/low and clip cards that visually sit above/below the
+  // section's untransformed box (e.g. rotated/staggered slideCards).
+  const getContentRect = useCallback(() => {
+    const els = cardRefs.current.filter((el): el is HTMLDivElement => el !== null)
+    if (els.length === 0) return null
+
+    let top = Infinity
+    let bottom = -Infinity
+    for (const el of els) {
+      const r = el.getBoundingClientRect()
+      if (r.top < top) top = r.top
+      if (r.bottom > bottom) bottom = r.bottom
+    }
+    if (!isFinite(top) || !isFinite(bottom)) return null
+    return { top, height: bottom - top }
+  }, [])
+
+  useSectionScrollLock({
+    sectionRef,
+    onDelta,
+    getProgress,
+    enabled: enableCarousel,
+    getContentRect,
+  })
 
   const handleFilter = (filter: string) => {
     setActiveFilter(filter)
