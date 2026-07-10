@@ -1,10 +1,3 @@
-/* ===== AURUM Cart Drawer v2 =====
-   Layout inspired by minimal editorial cart drawers:
-   big serif "Cart" title + count badge, text-only Close link,
-   free-shipping progress banner, Shipping/Total rows,
-   full-width checkout bar — all in AURUM's dark/gold theme.
-*/
-
 :root {
   --aurum-bg: #14100e;
   --aurum-bg-alt: #1c1613;
@@ -309,9 +302,6 @@
   color: var(--aurum-ivory);
   padding-top: 12px;
 }
-
-/* Full-width checkout bar — inverted (light on dark) to match
-   the reference's dark-on-light button, mirrored for our dark theme */
 .cart-drawer__checkout-full {
   width: 100%;
   padding: 20px 0;

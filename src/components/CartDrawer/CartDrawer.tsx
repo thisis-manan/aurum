@@ -12,10 +12,6 @@ const formatPrice = (n: number) =>
     currency: "INR",
     maximumFractionDigits: 0,
   }).format(n);
-
-// Scroll to the product showcase section and close the drawer.
-// Give ProductShowcase's outer section an id="product-showcase" for this to work.
-// If you're using Lenis for smooth scroll, swap this for your lenis.scrollTo() call.
 const scrollToShowcase = () => {
   document.getElementById("product-showcase")?.scrollIntoView({ behavior: "smooth" });
 };
@@ -34,24 +30,24 @@ export default function CartDrawer() {
   const remaining = FREE_SHIPPING_THRESHOLD - subtotal;
   const hasFreeShipping = remaining <= 0;
 
-  // Stagger the items in whenever the drawer opens with content already in it
-  useEffect(() => {
-    if (isOpen && items.length > 0) {
-      const els = document.querySelectorAll(".cart-drawer .cart-item");
-      gsap.fromTo(
-        els,
-        { opacity: 0, x: 24 },
-        {
-          opacity: 1,
-          x: 0,
-          duration: 0.45,
-          stagger: 0.08,
-          delay: 0.15,
-          ease: "power2.out",
-        }
+
+useEffect(() => {
+  if (isOpen && items.length > 0) {
+    const els = document.querySelectorAll(".cart-drawer .cart-item");
+    gsap.fromTo(
+      els,
+      { opacity: 0, x: 24 },
+      {
+        opacity: 1,
+        x: 0,
+        duration: 0.45,
+        stagger: 0.08,
+        delay: 0.15,
+        ease: "power2.out",
+      }
       );
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [isOpen]);
 
   return (

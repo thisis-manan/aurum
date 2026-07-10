@@ -69,15 +69,10 @@
   }
 }
 
-/* regular card = 1 column x 1 row */
 .occ2-card--regular {
   grid-column: span 1;
   grid-row: span 1;
 }
-
-/* wide/feature card: on mobile it behaves like a regular card so the
-   2-column grid fills evenly (8 items / 2 cols = 4 clean rows).
-   Only on desktop does it become the tall feature card. */
 .occ2-card--wide {
   grid-column: span 1;
   grid-row: span 1;
@@ -89,9 +84,6 @@
     grid-row: span 2;
   }
 }
-
-/* banner card = full-width row on desktop, avoids being left as a lone
-   orphan card in the last row of the dense grid */
 .occ2-card--banner {
   grid-column: span 1;
   grid-row: span 1;
@@ -147,8 +139,6 @@
     transform: scale(1.13);
   }
 }
-
-/* stagger each card's zoom cycle so they don't move in unison */
 .occ2-grid > a:nth-child(1) .occ2-card__image {
   --occ2-delay: 0s;
 }
@@ -172,8 +162,6 @@
   animation-play-state: paused;
   transform: scale(1.18);
 }
-
-/* gradient for legibility — image stays clearly visible */
 .occ2-card__scrim {
   position: absolute;
   inset: 0;
