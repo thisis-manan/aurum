@@ -1,0 +1,242 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap");
+
+/* ---------- section shell ---------- */
+.occ2-section {
+  width: 100%;
+  background: #f7f5f0;
+  color: #1c1a17;
+  padding: 5rem 1.5rem;
+  box-sizing: border-box;
+}
+
+.occ2-container {
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+/* ---------- header ---------- */
+.occ2-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.occ2-eyebrow {
+  display: inline-block;
+  font-family: "Manrope", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #a9803e;
+  margin-bottom: 1rem;
+}
+
+.occ2-heading {
+  font-family: "Playfair Display", serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: clamp(2.6rem, 5.5vw, 4rem);
+  line-height: 1.05;
+  color: #1c1a17;
+  margin: 0 0 0.9rem;
+}
+
+.occ2-subheading {
+  font-family: "Manrope", sans-serif;
+  font-size: 0.98rem;
+  color: #8a8377;
+  max-width: 28rem;
+  line-height: 1.6;
+  margin: 0 auto;
+}
+
+/* ---------- grid ---------- */
+.occ2-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: 260px;
+  grid-auto-flow: row dense;
+  gap: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .occ2-grid {
+    grid-template-columns: repeat(3, 1fr);
+    grid-auto-rows: 300px;
+    gap: 1.25rem;
+  }
+}
+
+.occ2-card--regular {
+  grid-column: span 1;
+  grid-row: span 1;
+}
+.occ2-card--wide {
+  grid-column: span 1;
+  grid-row: span 1;
+}
+
+@media (min-width: 768px) {
+  .occ2-card--wide {
+    grid-column: span 1;
+    grid-row: span 2;
+  }
+}
+.occ2-card--banner {
+  grid-column: span 1;
+  grid-row: span 1;
+}
+
+@media (min-width: 768px) {
+  .occ2-card--banner {
+    grid-column: 1 / -1;
+    grid-row: span 1;
+  }
+
+  .occ2-card--banner .occ2-card__title {
+    font-size: 1.4rem;
+  }
+
+  .occ2-card--banner .occ2-card__label {
+    left: 1.5rem;
+    right: 1.5rem;
+    bottom: 1.4rem;
+  }
+}
+.occ2-card {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+  border-radius: 14px;
+  background: #f2efe9;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.occ2-card__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transform: scale(1.02);
+  animation: occ2-breathe 9s ease-in-out infinite;
+  animation-delay: var(--occ2-delay, 0s);
+  transition: transform 0.6s ease;
+}
+
+@keyframes occ2-breathe {
+  0%,
+  100% {
+    transform: scale(1.02);
+  }
+  50% {
+    transform: scale(1.13);
+  }
+}
+.occ2-grid > a:nth-child(1) .occ2-card__image {
+  --occ2-delay: 0s;
+}
+.occ2-grid > a:nth-child(2) .occ2-card__image {
+  --occ2-delay: 0.7s;
+}
+.occ2-grid > a:nth-child(3) .occ2-card__image {
+  --occ2-delay: 1.4s;
+}
+.occ2-grid > a:nth-child(4) .occ2-card__image {
+  --occ2-delay: 2.1s;
+}
+.occ2-grid > a:nth-child(5) .occ2-card__image {
+  --occ2-delay: 2.8s;
+}
+.occ2-grid > a:nth-child(6) .occ2-card__image {
+  --occ2-delay: 3.5s;
+}
+
+.occ2-card:hover .occ2-card__image {
+  animation-play-state: paused;
+  transform: scale(1.18);
+}
+.occ2-card__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 45%,
+    rgba(0, 0, 0, 0.65) 100%
+  );
+  transition: background 0.4s ease;
+}
+
+.occ2-card:hover .occ2-card__scrim {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0) 30%,
+    rgba(0, 0, 0, 0.72) 100%
+  );
+}
+
+.occ2-card__label {
+  position: absolute;
+  left: 1.1rem;
+  right: 1.1rem;
+  bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
+}
+
+.occ2-card__title {
+  font-family: "Playfair Display", serif;
+  font-weight: 500;
+  font-style: italic;
+  font-size: 1.35rem;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.occ2-card__tagline {
+  font-family: "Manrope", sans-serif;
+  font-weight: 400;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 0.25rem;
+  line-height: 1.3;
+}
+
+.occ2-card--wide .occ2-card__title {
+  font-size: 1.4rem;
+}
+
+.occ2-card__underline {
+  display: block;
+  height: 2px;
+  width: 0;
+  background: #ffffff;
+  margin-top: 0.5rem;
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.occ2-card:hover .occ2-card__underline {
+  width: 32px;
+}
+
+.occ2-card:focus-visible {
+  outline: 2px solid #a9803e;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .occ2-card__image,
+  .occ2-card__scrim,
+  .occ2-card__underline {
+    transition: none !important;
+    animation: none !important;
+  }
+}

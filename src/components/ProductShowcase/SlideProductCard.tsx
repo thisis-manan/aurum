@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react'
 import type { Product } from '@/types'
 import styles from './ProductShowcase.module.css'
+import { useCart } from '../CartDrawer/CartContext'
 
 const WIDTH_VARIANTS = [300, 360, 270, 340, 310, 350]
 const ASPECT_VARIANTS = ['3 / 4.6', '4 / 5.8', '1 / 1.4', '3 / 5', '1 / 1.3', '4 / 6']
@@ -23,6 +24,17 @@ export default function DragProductCard({
     width: `${width}px`,
   } as CSSProperties
 
+  const { addItem } = useCart()
+
+  const handleQuickAdd = () => {
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.imageUrl,
+    })
+  }
+
   return (
     <div className={`${styles.productCard} ${styles.slideCard}`} style={cardVars}>
       <div className={styles.imageContainer} style={{ aspectRatio: aspect }}>
@@ -32,7 +44,7 @@ export default function DragProductCard({
           className={styles.productImage}
           draggable={false}
         />
-        <button className={styles.quickAdd}>Quick Add</button>
+        <button className={styles.quickAdd} onClick={handleQuickAdd}>Quick Add</button>
       </div>
 
       <span className={styles.categoryLabel}>{product.category}</span>

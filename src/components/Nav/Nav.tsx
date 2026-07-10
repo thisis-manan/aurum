@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import styles from './Nav.module.css'
+import { useCart } from '../CartDrawer/CartContext'
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false)
   const [hidden, setHidden] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const { toggleCart, itemCount } = useCart()
 
   useEffect(() => {
     let lastScrollY = 0
@@ -72,12 +74,12 @@ export default function Nav() {
 
         <div className={styles.actions}>
           <button>Search</button>
-          <button>Bag 0</button>
+          <button onClick={toggleCart}>Bag {itemCount}</button>
         </div>
 
         <div className={styles.mobileActions}>
-          <button className={styles.bagButton}>
-            Bag 0
+          <button className={styles.bagButton} onClick={toggleCart}>
+            Bag {itemCount}
           </button>
 
           <button

@@ -2,6 +2,7 @@ import { useRef, useState, type CSSProperties, type MouseEvent } from 'react'
 import type { Product } from '@/types'
 import styles from './ProductShowcase.module.css'
 import { useGalleryReveal } from '@/hooks/useGalleryReveal'
+import { useCart } from '../CartDrawer/CartContext'
 
 const MAX_TILT = 12 // degrees — keep it bold but not disorienting
 
@@ -16,6 +17,7 @@ export default function GalleryProductCard({
   const tiltRef = useRef<HTMLDivElement>(null)
   const [tilt, setTilt] = useState({ rx: 0, ry: 0, gx: 50, gy: 50 })
   const [flipped, setFlipped] = useState(false)
+  const { addItem } = useCart()
 
   // deterministic scatter angle per card, -4deg to +4deg, differs by index
   const scatterRotation = ((index * 37) % 9) - 4
@@ -38,6 +40,16 @@ export default function GalleryProductCard({
   function handleLeave() {
     setTilt({ rx: 0, ry: 0, gx: 50, gy: 50 })
     setFlipped(false)
+  }
+
+  function handleQuickAdd(e: MouseEvent<HTMLButtonElement>) {
+    e.stopPropagation()
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.imageUrl,
+    })
   }
 
   const tiltVars = {
@@ -77,7 +89,7 @@ export default function GalleryProductCard({
             <span className={styles.categoryLabel}>{product.category}</span>
             <p className={styles.tiltBackName}>{product.name}</p>
             <p className={styles.tiltBackPrice}>₹ {product.price.toLocaleString('en-IN')}</p>
-            <button className={styles.tiltBackCta}>Quick Add</button>
+            <button className={styles.tiltBackCta} onClick={handleQuickAdd}>Quick Add</button>
           </div>
         </div>
       </div>

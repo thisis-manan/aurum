@@ -1,9 +1,3 @@
-/* ============================================================
-   WebGL photo dome — pinned, scroll-driven section (DomeGallery.tsx).
-   The tall .gallerySection provides the scroll distance; .domeSticky pins the
-   dome to the viewport while you scroll through it, and scroll progress spins
-   the dome sideways.
-   ============================================================ */
 .gallerySection {
   position: relative;
   width: 100%;
@@ -18,9 +12,7 @@
   overflow: hidden;
 }
 
-/* Radial clock-menu docked to the bottom of the dome section only. It rides
-   the sticky wrapper, so it's visible while the dome is pinned and scrolls
-   away with it — never over the hero or footer. */
+
 .clockDock {
   position: absolute;
   left: 0;
@@ -38,7 +30,7 @@
   width: 100%;
   height: 100%;
   cursor: grab;
-  touch-action: pan-y; /* let vertical touch-scroll drive the rotation */
+  touch-action: pan-y; 
   animation: fade-in 0.8s ease both;
 }
 
