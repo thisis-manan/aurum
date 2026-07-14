@@ -2,12 +2,13 @@ import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import styles from './Hero.module.css'
 
-export default function Hero() {
+export default function Hero({ ready = true }: { ready?: boolean }) {
   const eyebrowRef = useRef<HTMLParagraphElement>(null)
   const headlineRef = useRef<HTMLHeadingElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
+    if (!ready) return
     const tl = gsap.timeline({ delay: 0.3 })
 
     tl.fromTo(eyebrowRef.current,
@@ -24,7 +25,7 @@ export default function Hero() {
       { opacity: 1, duration: 0.6 },
       '-=0.3'
     )
-  }, [])
+  }, [ready])
 
   return (
     <section className={styles.hero}>

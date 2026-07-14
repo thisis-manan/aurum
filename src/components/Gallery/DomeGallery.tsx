@@ -1,7 +1,9 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
-import { photos } from '../../data/photos'
+import { useCategory, type CategoryKey } from '../../context/CategoryContext'
+import { categoryFromProgress, photos, progressForCategory } from '../../data/photos'
 import ClockMenu from '../ClockMenu/ClockMenu'
+import { useSectionScrollLock } from '../ProductShowcase/useSectionScrollLock'
 import styles from './Gallery.module.css'
 
 /**
@@ -41,8 +43,10 @@ const D_ORBIT_SENSITIVITY = 0.253
 // that track maps to sideways rotation of the dome: scroll down → orbit around.
 // This turns "up/down" wheel-scroll into "side to side" for the middle section,
 // while the page still scrolls normally past it to the footer.
-const SCROLL_SPAN = Math.PI * 3 // total orbit swept across the whole track
+const SCROLL_SPAN = Math.PI * 3 // total orbit swept across the pinned section
 const ORBIT_SMOOTH = 0.12 // easing toward the scroll target each frame
+const SCROLL_WHEEL_FACTOR = 0.0014
+const AUTOPLAY_SPEED = 0.000055
 
 // --- drag model (optional manual nudge, layered on top of scroll) ---
 const DRAG_SCALE = 0.9
@@ -80,8 +84,70 @@ function planeSize(aspect: number) {
 }
 
 export default function DomeGallery() {
+  const { categoryKey, setCategoryKey } = useCategory()
   const mountRef = useRef<HTMLDivElement>(null)
   const sectionRef = useRef<HTMLElement>(null)
+  const progressTarget = useRef(0)
+  const orbitAngleRef = useRef(0)
+  const dragAngleRef = useRef(0)
+  const dragVelRef = useRef(0)
+  const syncingFromDomeRef = useRef(false)
+  const lastSyncedKeyRef = useRef<CategoryKey>(categoryKey)
+  const setCategoryKeyRef = useRef(setCategoryKey)
+  const [galleryProgress, setGalleryProgress] = useState(0)
+
+  useEffect(() => {
+    setCategoryKeyRef.current = setCategoryKey
+  }, [setCategoryKey])
+
+  const onDelta = useCallback((dy: number) => {
+    progressTarget.current = Math.min(
+      1,
+      Math.max(0, progressTarget.current + dy * SCROLL_WHEEL_FACTOR)
+    )
+  }, [])
+
+  const getProgress = useCallback(
+    () => ({
+      progress: Math.min(1, Math.max(0, orbitAngleRef.current / SCROLL_SPAN)),
+      max: 1,
+    }),
+    []
+  )
+
+  useSectionScrollLock({
+    sectionRef,
+    onDelta,
+    getProgress,
+    enabled: true,
+  })
+
+  const jumpToCategory = useCallback((key: string) => {
+    const p = progressForCategory(key)
+    progressTarget.current = p
+    dragAngleRef.current = 0
+    dragVelRef.current = 0
+    orbitAngleRef.current = p * SCROLL_SPAN
+    setGalleryProgress(p)
+    lastSyncedKeyRef.current = key as CategoryKey
+  }, [])
+
+  useEffect(() => {
+    if (syncingFromDomeRef.current) {
+      syncingFromDomeRef.current = false
+      return
+    }
+    if (categoryKey === lastSyncedKeyRef.current) return
+    jumpToCategory(categoryKey)
+  }, [categoryKey, jumpToCategory])
+
+  const absorbDragIntoProgress = () => {
+    const total = progressTarget.current * SCROLL_SPAN + dragAngleRef.current
+    progressTarget.current = Math.min(1, Math.max(0, total / SCROLL_SPAN))
+    dragAngleRef.current = 0
+    dragVelRef.current = 0
+    orbitAngleRef.current = progressTarget.current * SCROLL_SPAN
+  }
 
   useEffect(() => {
     const mount = mountRef.current
@@ -232,12 +298,8 @@ export default function DomeGallery() {
       posAttr.needsUpdate = true
     }
 
-    // orbitAngle: the eased angle actually rendered.
-    // dragAngle: persistent manual offset accumulated from pointer drags.
-    // dragVel: momentum for that drag offset.
-    let orbitAngle = 0
-    let dragAngle = 0
-    let dragVel = 0
+    // orbitAngle: eased render angle (ref for clock sync + category jumps).
+    let orbitAngle = orbitAngleRef.current
     const clamp = (v: number) => Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, v))
 
     const canvas = renderer.domElement
@@ -261,13 +323,15 @@ export default function DomeGallery() {
         canvas.classList.add(styles.dragging)
       }
       if (!didDrag) return
-      dragVel = clamp(dragVel - dx * DRAG_SCALE)
+      dragVelRef.current = clamp(dragVelRef.current - dx * DRAG_SCALE)
+      dragAngleRef.current += -dx * 0.004 * D_ORBIT_SENSITIVITY
     }
     const endDrag = (ev: PointerEvent) => {
       if (activePointerId === null || ev.pointerId !== activePointerId) return
       if (didDrag) {
         suppressClickUntil = performance.now() + CLICK_SUPPRESS_MS
         canvas.classList.remove(styles.dragging)
+        absorbDragIntoProgress()
       }
       canvas.releasePointerCapture?.(ev.pointerId)
       activePointerId = null
@@ -297,22 +361,34 @@ export default function DomeGallery() {
 
     // --- render loop ---
     let raf = 0
+    let syncTick = 0
     const tick = () => {
-      // drag momentum → persistent manual offset
-      dragVel *= VELOCITY_DECAY
-      if (Math.abs(dragVel) < 0.02) dragVel = 0
-      dragAngle += dragVel * 0.005 * D_WHEEL_FACTOR * D_WHEEL_DIRECTION * D_ORBIT_SENSITIVITY
+      dragVelRef.current *= VELOCITY_DECAY
+      if (Math.abs(dragVelRef.current) < 0.02) dragVelRef.current = 0
+      dragAngleRef.current +=
+        dragVelRef.current * 0.005 * D_WHEEL_FACTOR * D_WHEEL_DIRECTION * D_ORBIT_SENSITIVITY
 
-      // scroll progress across the pinned track → [0, 1]
-      const rect = section.getBoundingClientRect()
-      const scrollable = section.offsetHeight - window.innerHeight
-      const progress = scrollable > 0 ? Math.min(1, Math.max(0, -rect.top / scrollable)) : 0
+      if (progressTarget.current < 1) {
+        progressTarget.current = Math.min(1, progressTarget.current + AUTOPLAY_SPEED)
+      }
 
-      // ease the rendered angle toward (scroll target + drag offset)
-      const target = progress * SCROLL_SPAN + dragAngle
+      const target = progressTarget.current * SCROLL_SPAN + dragAngleRef.current
       const step = (target - orbitAngle) * ORBIT_SMOOTH
       orbitAngle += step
-      const peel = step * 0.5 // warp responds to how fast we're spinning
+      orbitAngleRef.current = orbitAngle
+      const peel = step * 0.5
+
+      syncTick += 1
+      if (syncTick % 2 === 0) {
+        const p = Math.min(1, Math.max(0, orbitAngle / SCROLL_SPAN))
+        setGalleryProgress(p)
+        const nextKey = categoryFromProgress(p)
+        if (nextKey !== lastSyncedKeyRef.current) {
+          lastSyncedKeyRef.current = nextKey
+          syncingFromDomeRef.current = true
+          setCategoryKeyRef.current(nextKey)
+        }
+      }
 
       camera.lookAt(DOME_RADIUS * 0.9 * Math.sin(orbitAngle), 0, DOME_RADIUS * 0.9 * Math.cos(orbitAngle))
       camera.updateMatrixWorld()
@@ -357,7 +433,7 @@ export default function DomeGallery() {
         <div ref={mountRef} className={styles.dome} />
         {/* Radial clock-menu, scoped to the dome section (ported from meech213) */}
         <div className={styles.clockDock}>
-          <ClockMenu />
+          <ClockMenu galleryProgress={galleryProgress} />
         </div>
       </div>
     </section>

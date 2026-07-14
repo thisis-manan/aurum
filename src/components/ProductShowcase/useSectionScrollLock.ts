@@ -1,9 +1,15 @@
 import { useEffect, useRef } from 'react'
+
 type ProgressInfo = { progress: number; max: number }
 type ContentRect = { top: number; height: number }
 
+type LenisLike = {
+  stop: () => void
+  start: () => void
+}
+
 interface UseSectionScrollLockArgs {
-  sectionRef: React.RefObject<HTMLElement>
+  sectionRef: React.RefObject<HTMLElement | null>
   onDelta: (dy: number) => void
   getProgress: () => ProgressInfo
   enabled?: boolean
@@ -11,11 +17,9 @@ interface UseSectionScrollLockArgs {
   getContentRect?: () => ContentRect | null
 }
 
-interface LenisLike {
-  stop: () => void
-  start: () => void
-}
+const getLenis = () => (window as Window & { lenis?: LenisLike }).lenis
 
+const EPS = 0.002
 declare global {
   interface Window {
     lenis?: LenisLike
@@ -47,6 +51,8 @@ export function useSectionScrollLock({
     if (!section) return
 
     const lock = () => {
+      locked.current = true
+      getLenis()?.stop()
       
       window.lenis?.stop()
       locked.current = true
@@ -65,7 +71,22 @@ export function useSectionScrollLock({
     }
 
     const unlock = () => {
+      if (!locked.current) return
       locked.current = false
+      getLenis()?.start()
+      document.documentElement.style.overflow = ''
+      document.documentElement.style.touchAction = ''
+      document.body.style.touchAction = ''
+    }
+
+    const releaseScroll = (dy: number) => {
+      unlock()
+      if (dy !== 0) {
+        requestAnimationFrame(() => {
+          window.scrollBy({ top: dy, left: 0, behavior: 'auto' })
+          getLenis()?.start()
+        })
+      }
       hijackActive.current = false
       if (settleTimeout.current) {
         clearTimeout(settleTimeout.current)
@@ -83,6 +104,26 @@ export function useSectionScrollLock({
     }
     window.addEventListener('keydown', onKeyDown)
 
+      const rect = section.getBoundingClientRect()
+      if (locked.current && rect.bottom <= EPS) {
+        unlock()
+        return
+      }
+      if (locked.current && rect.top >= window.innerHeight - EPS) {
+        unlock()
+        return
+      }
+
+      if (!locked.current) {
+        if (dy > 0 && rect.top > EPS && rect.top < window.innerHeight) {
+          if (rect.top - dy <= EPS) {
+            e.preventDefault()
+            window.scrollTo({ top: window.scrollY + rect.top, behavior: 'auto' })
+            lock()
+            const leftover = dy - rect.top
+            if (leftover > EPS) onDelta(leftover)
+          }
+          return
     let lastProgress: number | null = null
     let stuckSince = 0
     const STUCK_TIMEOUT_MS = 4000
@@ -144,6 +185,17 @@ export function useSectionScrollLock({
     }
     watchRaf = requestAnimationFrame(watchDock)
 
+        if (dy < 0 && rect.top < -EPS && rect.bottom > 0) {
+          if (rect.top - dy >= -EPS) {
+            e.preventDefault()
+            window.scrollTo({ top: window.scrollY + rect.top, behavior: 'auto' })
+            lock()
+            const leftover = dy - rect.top
+            if (leftover < -EPS) onDelta(leftover)
+          }
+          return
+        }
+
     const handleDelta = (dy: number, e: { preventDefault: () => void }) => {
       if (dy === 0 || !locked.current) return
 
@@ -157,11 +209,13 @@ export function useSectionScrollLock({
       const atEnd = progress >= max - EPS
 
       if (dy > 0 && atEnd) {
-        unlock()
+        e.preventDefault()
+        releaseScroll(dy)
         return
       }
       if (dy < 0 && atStart) {
-        unlock()
+        e.preventDefault()
+        releaseScroll(dy)
         return
       }
 
@@ -169,6 +223,12 @@ export function useSectionScrollLock({
       onDelta(dy)
     }
 
+    const onWheel = (e: WheelEvent) => {
+      const rect = section.getBoundingClientRect()
+      if (!locked.current && (rect.bottom < 0 || rect.top > window.innerHeight)) return
+      handleDelta(e.deltaY, e)
+    }
+    const NEAR_DOCK_BUFFER = window.innerHeight * 1.5
     const onWheel = (e: WheelEvent) => handleDelta(e.deltaY, e)
 
     const onTouchStart = (e: TouchEvent) => {
@@ -189,6 +249,11 @@ export function useSectionScrollLock({
       window.removeEventListener('wheel', onWheel, { capture: true } as EventListenerOptions)
       window.removeEventListener('touchstart', onTouchStart, { capture: true } as EventListenerOptions)
       window.removeEventListener('touchmove', onTouchMove, { capture: true } as EventListenerOptions)
+      window.removeEventListener('touchend', onTouchEnd, { capture: true } as EventListenerOptions)
+      document.documentElement.style.touchAction = ''
+      document.documentElement.style.overflow = ''
+      document.body.style.touchAction = ''
+      unlock()
       window.removeEventListener('keydown', onKeyDown)
       cancelAnimationFrame(watchRaf)
       if (settleTimeout.current) clearTimeout(settleTimeout.current)

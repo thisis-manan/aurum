@@ -2,7 +2,6 @@
   position: fixed;
   inset: 0;
   z-index: 999;
-  cursor: pointer;
   overflow: hidden;
 }
 
@@ -13,10 +12,6 @@
   z-index: 1;
 }
 
-/* The reveal: starts clipped down to a small centered box (roughly
-   480x300 on a typical desktop viewport), then the clip-path expands
-   to cover everything. Same video source as the real Hero, so once
-   this unmounts the handoff is seamless — no flash, no reload. */
 .revealVideo {
   position: fixed;
   inset: 0;
@@ -65,9 +60,6 @@
   transition: transform 1.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Logo + wordmark shrink and travel toward the real Nav logo's position
-   (top-left, ~64px/40px) instead of just fading out in place — this is
-   what makes the reveal feel like a landing, not a cut. */
 .contentSettle {
   transform: translate(calc(-50vw + 64px), calc(-50vh + 40px)) scale(0.22);
 }
