@@ -8,8 +8,8 @@ import styles from './Intro.module.css'
  * progresses; at 100% the frame expands to fullscreen, revealing the hero.
  */
 
-const LOADING_DURATION_MS = 9000
-const REVEAL_DURATION_MS = 2600
+const LOADING_DURATION_MS = 2000
+const REVEAL_DURATION_MS = 1800
 
 function progressCurve(t: number): number {
   const clamped = Math.min(Math.max(t, 0), 1)
@@ -69,7 +69,7 @@ export default function Intro({
   useEffect(() => {
     // ignore stray trackpad/wheel momentum right after mount so the
     // intro text is always seen before a scroll can skip it
-    const armedAt = performance.now() + 1500
+    const armedAt = performance.now() + 800
     const onWheel = () => {
       if (performance.now() < armedAt) return
       if (phaseRef.current === 'loading') {
