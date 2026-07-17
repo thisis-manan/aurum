@@ -7,23 +7,18 @@ import { useSectionScrollLock } from '../ProductShowcase/useSectionScrollLock'
 import styles from './Gallery.module.css'
 
 /**
- * Photo page — faithful WebGL rebuild of meech213.com/photo.
- *
- * The original is a Three.js scene: a ring ("dome") of image planes that a
- * camera orbits through, with a per-vertex curve warp and momentum scrolling.
- * Every constant below is lifted verbatim from the original bundle
- * (meech213.tbpdev.com/main.js) so the geometry and feel match.
+ * Photo page — WebGL rebuild of meech213.com/photo.
  */
 
-// --- Scene config (static class fields in the original) ---
+// --- Scene config (Optimized to make images larger and bring them closer to cover negative space) ---
 const VISIBLE_COUNT = 12
 const REASSIGN_COUNT = 4
 const SAFE_VISIBLE_COUNT = VISIBLE_COUNT - REASSIGN_COUNT // 8
-const DOME_RADIUS = 15.2
-const HORIZONTAL_RING_RADIUS = DOME_RADIUS * 0.95 // 14.44
-const PLANE_HEIGHT = 8.1
-const MAX_PLANE_WIDTH = 9.9
-const MIN_PLANE_WIDTH = 5.6
+const DOME_RADIUS = 13.5 // Pulls images closer to camera (was 15.2)
+const HORIZONTAL_RING_RADIUS = DOME_RADIUS * 0.95 // 12.825 (was 14.44)
+const PLANE_HEIGHT = 10.8 // Taller image planes (was 8.1)
+const MAX_PLANE_WIDTH = 13.2 // Proportionately wider (was 9.9)
+const MIN_PLANE_WIDTH = 7.5 // Proportionately wider (was 5.6)
 const COLLISION_SCALE = 0.94
 const THETA_OFFSET = 0
 const PLANE_SEGMENTS = 16
@@ -39,16 +34,12 @@ const D_DEPTH_CURVE_STRENGTH = 0.05
 const D_ORBIT_SENSITIVITY = 0.253
 
 // --- scroll-driven orbit ---
-// The dome is pinned (sticky) inside a tall track. Vertical page-scroll through
-// that track maps to sideways rotation of the dome: scroll down → orbit around.
-// This turns "up/down" wheel-scroll into "side to side" for the middle section,
-// while the page still scrolls normally past it to the footer.
 const SCROLL_SPAN = Math.PI * 3 // total orbit swept across the pinned section
 const ORBIT_SMOOTH = 0.12 // easing toward the scroll target each frame
 const SCROLL_WHEEL_FACTOR = 0.0014
-const AUTOPLAY_SPEED = 0.000055
+const AUTOPLAY_SPEED = 0.0002
 
-// --- drag model (optional manual nudge, layered on top of scroll) ---
+// --- drag model ---
 const DRAG_SCALE = 0.9
 const VELOCITY_DECAY = 0.92
 const MAX_VELOCITY = 180
@@ -57,20 +48,18 @@ const CLICK_SUPPRESS_MS = 250
 
 const mod = (n: number, m: number) => ((n % m) + m) % m
 
-// recycleOrder = ceil((PI*1.5)/step) % COUNT, then [t, t+1, …] mod COUNT
+// recycleOrder
 const STEP = FULL_CIRCLE / VISIBLE_COUNT
 const RECYCLE_START = Math.ceil((Math.PI * 1.5) / STEP) % VISIBLE_COUNT // 9
 const RECYCLE_ORDER = Array.from({ length: VISIBLE_COUNT }, (_, n) => (RECYCLE_START + n) % VISIBLE_COUNT)
 
-// Fixed positions of the 12 slots. The real meech213 gallery is a SINGLE
-// horizontal ring (a cylinder viewed from its centre), not a stacked dome — the
-// images sit in one upright band and the camera rotates sideways through them.
+// Fixed positions of the 12 slots.
 function buildDomePositions() {
   const out: { x: number; y: number; z: number }[] = []
   for (let e = 0; e < VISIBLE_COUNT; e++) {
     const t = THETA_OFFSET + (e / VISIBLE_COUNT) * FULL_CIRCLE
     const x = HORIZONTAL_RING_RADIUS * Math.cos(t)
-    const y = 0 // one level band — no vertical spread
+    const y = 0
     const z = HORIZONTAL_RING_RADIUS * Math.sin(t)
     out.push({ x, y, z })
   }
@@ -81,6 +70,50 @@ function planeSize(aspect: number) {
   const w = Math.max(MIN_PLANE_WIDTH, Math.min(MAX_PLANE_WIDTH, PLANE_HEIGHT * aspect)) * COLLISION_SCALE
   const h = PLANE_HEIGHT * COLLISION_SCALE
   return { w, h }
+}
+
+const JEWELRY_CATEGORY_KEYS = ['ring', 'necklaces', 'bracelets', 'earrings'] as const
+type JewelryCategoryKey = (typeof JEWELRY_CATEGORY_KEYS)[number]
+
+function normalizeToCategoryKey(key: string): CategoryKey | null {
+  if (!key) return null
+  const lower = key.toLowerCase()
+  if (lower === 'all') return 'all'
+  if (lower === 'ring' || lower === 'rings') return 'ring'
+  if (lower === 'necklaces' || lower === 'necklace') return 'necklaces'
+  if (lower === 'bracelets' || lower === 'bracelet') return 'bracelets'
+  if (lower === 'earrings' || lower === 'earring') return 'earrings'
+  return null
+}
+
+function isJewelryCategoryKey(key: CategoryKey): key is JewelryCategoryKey {
+  return (JEWELRY_CATEGORY_KEYS as readonly string[]).includes(key)
+}
+
+/** Only trust progressForCategory when the key is a known CategoryKey value. */
+function safeProgressForCategory(key: string): number | null {
+  const normalized = normalizeToCategoryKey(key)
+  if (!normalized) return null
+  if (normalized === 'all') return 0
+
+  const val = progressForCategory(normalized)
+  if (val == null || val < 0 || !Number.isFinite(val)) return null
+  return val
+}
+
+function getCategoryProgressVal(key: string): number {
+  return safeProgressForCategory(key) ?? 0
+}
+
+function clockProgressForKey(key: string): number | null {
+  const normalized = normalizeToCategoryKey(key)
+  if (!normalized) return key.toLowerCase() === 'about' ? 0 : null
+  if (normalized === 'all') return 0
+  if (normalized === 'ring') return 0.25
+  if (normalized === 'necklaces') return 0.5
+  if (normalized === 'earrings') return 0.75
+  if (normalized === 'bracelets') return 1
+  return null
 }
 
 export default function DomeGallery() {
@@ -96,11 +129,73 @@ export default function DomeGallery() {
   const setCategoryKeyRef = useRef(setCategoryKey)
   const [galleryProgress, setGalleryProgress] = useState(0)
 
+  // Transition lock ref to prevent state updates while smoothly panning
+  const isTransitioningRef = useRef(false)
+
   useEffect(() => {
     setCategoryKeyRef.current = setCategoryKey
   }, [setCategoryKey])
 
+  // --- Clock Progress Alignment Logic ---
+  // Maps raw category indexes seamlessly to the physical dial coordinates:
+  // ABOUT (0.00) -> RING (0.25) -> NECKLACES (0.50) -> EARRINGS (0.75) -> BRACELETS (1.00)
+  const getClockProgress = useCallback((p: number, key?: string): number => {
+    if (key) {
+      const keyed = clockProgressForKey(key)
+      if (keyed != null) return keyed
+    }
+
+    // Use canonical CategoryKey values — capitalized labels miss the map and all resolve to 0.375.
+    const pRings = safeProgressForCategory('ring')
+    const pNecklaces = safeProgressForCategory('necklaces')
+    const pBraceletsRaw = safeProgressForCategory('bracelets')
+    const pEarringsRaw = safeProgressForCategory('earrings')
+
+    if (
+      pRings == null ||
+      pNecklaces == null ||
+      pBraceletsRaw == null ||
+      pEarringsRaw == null
+    ) {
+      return Math.min(1, Math.max(0, p))
+    }
+
+    const targets = [
+      { key: 'ring', raw: pRings, clock: 0.25 },
+      { key: 'necklaces', raw: pNecklaces, clock: 0.5 },
+    ]
+
+    // Gallery scroll order is ring → necklaces → bracelets → earrings, but the dial
+    // reads left-to-right as ring → necklaces → earrings → bracelets.
+    if (pBraceletsRaw < pEarringsRaw) {
+      targets.push({ key: 'bracelets', raw: pBraceletsRaw, clock: 0.75 })
+      targets.push({ key: 'earrings', raw: pEarringsRaw, clock: 1 })
+    } else {
+      targets.push({ key: 'earrings', raw: pEarringsRaw, clock: 0.75 })
+      targets.push({ key: 'bracelets', raw: pBraceletsRaw, clock: 1 })
+    }
+
+    targets.sort((a, b) => a.raw - b.raw)
+
+    if (p <= targets[0].raw) return targets[0].clock
+    if (p >= targets[targets.length - 1].raw) return targets[targets.length - 1].clock
+
+    for (let i = 0; i < targets.length - 1; i++) {
+      const start = targets[i]
+      const end = targets[i + 1]
+      if (p >= start.raw && p <= end.raw) {
+        const range = end.raw - start.raw
+        if (range === 0) return start.clock
+        const t = (p - start.raw) / range
+        return start.clock + t * (end.clock - start.clock)
+      }
+    }
+
+    return Math.min(1, Math.max(0, p))
+  }, [])
+
   const onDelta = useCallback((dy: number) => {
+    isTransitioningRef.current = false // Interrupt programmatic transition on manual scroll
     progressTarget.current = Math.min(
       1,
       Math.max(0, progressTarget.current + dy * SCROLL_WHEEL_FACTOR)
@@ -122,15 +217,22 @@ export default function DomeGallery() {
     enabled: true,
   })
 
-  const jumpToCategory = useCallback((key: string) => {
-    const p = progressForCategory(key)
-    progressTarget.current = p
-    dragAngleRef.current = 0
-    dragVelRef.current = 0
-    orbitAngleRef.current = p * SCROLL_SPAN
-    setGalleryProgress(p)
-    lastSyncedKeyRef.current = key as CategoryKey
-  }, [])
+  const jumpToCategory = useCallback(
+    (key: CategoryKey) => {
+      const normalized = normalizeToCategoryKey(key)
+      if (!normalized) return
+
+      const p = getCategoryProgressVal(normalized)
+      progressTarget.current = p
+      dragAngleRef.current = 0
+      dragVelRef.current = 0
+      isTransitioningRef.current = true
+
+      setGalleryProgress(getClockProgress(p, normalized))
+      lastSyncedKeyRef.current = normalized
+    },
+    [getClockProgress]
+  )
 
   useEffect(() => {
     if (syncingFromDomeRef.current) {
@@ -212,7 +314,7 @@ export default function DomeGallery() {
       u.currentImageIndex = idx
       u.op = 0 // fade the fresh image in
       loadTexture(photos[idx].src).then((tex) => {
-        if (u.currentImageIndex !== idx) return // superseded by a newer assign
+        if (u.currentImageIndex !== idx) return
         const img = tex.image as HTMLImageElement
         const { w, h } = planeSize(img.width / img.height)
         setGeometry(mesh, w, h)
@@ -222,7 +324,7 @@ export default function DomeGallery() {
     }
 
     for (let e = 0; e < VISIBLE_COUNT; e++) {
-      const { w, h } = planeSize(PLANE_HEIGHT / PLANE_HEIGHT) // placeholder square until texture loads
+      const { w, h } = planeSize(PLANE_HEIGHT / PLANE_HEIGHT)
       const geo = new THREE.PlaneGeometry(w, h, PLANE_SEGMENTS, PLANE_SEGMENTS)
       const mat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, side: THREE.DoubleSide })
       const mesh = new THREE.Mesh(geo, mat)
@@ -242,7 +344,7 @@ export default function DomeGallery() {
       assignImage(mesh, e)
     }
 
-    // --- recycling: swap textures on planes that pass behind the camera ---
+    // --- recycling ---
     const getSafeSet = (angle: number) => {
       const r = DOME_RADIUS * 0.9 * Math.sin(angle)
       const i = DOME_RADIUS * 0.9 * Math.cos(angle)
@@ -274,7 +376,7 @@ export default function DomeGallery() {
       }
     }
 
-    // --- per-vertex warp (runs every frame per plane) ---
+    // --- per-vertex warp ---
     const warp = (mesh: (typeof planes)[number], peel: number) => {
       const geo = mesh.geometry
       const posAttr = geo.attributes.position
@@ -298,7 +400,6 @@ export default function DomeGallery() {
       posAttr.needsUpdate = true
     }
 
-    // orbitAngle: eased render angle (ref for clock sync + category jumps).
     let orbitAngle = orbitAngleRef.current
     const clamp = (v: number) => Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, v))
 
@@ -309,6 +410,7 @@ export default function DomeGallery() {
     let didDrag = false
     let suppressClickUntil = 0
     const onPointerDown = (ev: PointerEvent) => {
+      isTransitioningRef.current = false // Interrupt programmatic transition on manual drag
       activePointerId = ev.pointerId
       startX = lastX = ev.clientX
       didDrag = false
@@ -368,7 +470,7 @@ export default function DomeGallery() {
       dragAngleRef.current +=
         dragVelRef.current * 0.005 * D_WHEEL_FACTOR * D_WHEEL_DIRECTION * D_ORBIT_SENSITIVITY
 
-      if (progressTarget.current < 1) {
+      if (!isTransitioningRef.current && progressTarget.current < 1) {
         progressTarget.current = Math.min(1, progressTarget.current + AUTOPLAY_SPEED)
       }
 
@@ -378,15 +480,24 @@ export default function DomeGallery() {
       orbitAngleRef.current = orbitAngle
       const peel = step * 0.5
 
+      // Disable transition lock when camera safely reaches the target category
+      if (isTransitioningRef.current && Math.abs(target - orbitAngle) < 0.01) {
+        isTransitioningRef.current = false
+      }
+
       syncTick += 1
       if (syncTick % 2 === 0) {
         const p = Math.min(1, Math.max(0, orbitAngle / SCROLL_SPAN))
-        setGalleryProgress(p)
-        const nextKey = categoryFromProgress(p)
-        if (nextKey !== lastSyncedKeyRef.current) {
-          lastSyncedKeyRef.current = nextKey
-          syncingFromDomeRef.current = true
-          setCategoryKeyRef.current(nextKey)
+        setGalleryProgress(getClockProgress(p))
+        
+        // Sync state back to react ONLY if we aren't in the middle of a menu click transition
+        if (!isTransitioningRef.current) {
+          const nextKey = categoryFromProgress(p)
+          if (isJewelryCategoryKey(nextKey) && nextKey !== lastSyncedKeyRef.current) {
+            lastSyncedKeyRef.current = nextKey
+            syncingFromDomeRef.current = true
+            setCategoryKeyRef.current(nextKey)
+          }
         }
       }
 
@@ -425,13 +536,12 @@ export default function DomeGallery() {
       renderer.dispose()
       if (canvas.parentNode === mount) mount.removeChild(canvas)
     }
-  }, [])
+  }, [getClockProgress])
 
   return (
     <section ref={sectionRef} className={styles.gallerySection} data-namespace="photos">
       <div className={styles.domeSticky}>
         <div ref={mountRef} className={styles.dome} />
-        {/* Radial clock-menu, scoped to the dome section (ported from meech213) */}
         <div className={styles.clockDock}>
           <ClockMenu galleryProgress={galleryProgress} />
         </div>
