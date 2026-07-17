@@ -75,7 +75,7 @@ export default function ProductShowcase() {
   // Set default category to 'All' when component mounts
   useEffect(() => {
     setCategoryLabel('All')
-  }, [])
+  }, [setCategoryLabel])
 
   useEffect(() => {
     const wrapper = scrollRef.current
@@ -125,54 +125,6 @@ export default function ProductShowcase() {
     scrollRef.current?.scrollTo({ left: 0, behavior: 'auto' })
     applyWheelTransforms()
   }, [categoryLabel])
-  }, [measure, applyWheelTransforms, applyGridTransform, scrollToOpeningPosition])
-  const onDelta = useCallback((dy: number) => {
-    velocity.current = 0
-    target.current = clamp(target.current + dy * SCROLL_TO_HORIZONTAL)
-    console.log('[carousel-debug]', { dy, target: target.current, current: current.current, maxScroll: maxScroll.current })
-    ensureLoop()
-  }, [ensureLoop])
-
-  const getProgress = useCallback(() => ({
-    progress: target.current,
-    max: maxScroll.current,
-  }), [])
-
-
-  
-  const getContentRect = useCallback(() => {
-    const els = cardRefs.current.filter((el): el is HTMLDivElement => el !== null)
-    if (els.length === 0) return null
-
-    let top = Infinity
-    let bottom = -Infinity
-    for (const el of els) {
-      const r = el.getBoundingClientRect()
-      if (r.top < top) top = r.top
-      if (r.bottom > bottom) bottom = r.bottom
-    }
-    if (!isFinite(top) || !isFinite(bottom)) return null
-    return { top, height: bottom - top }
-  }, [])
-
-  useSectionScrollLock({
-    sectionRef,
-    onDelta,
-    getProgress,
-    enabled: enableCarousel,
-    getContentRect,
-  })
-
-  const handleFilter = (filter: string) => {
-    setActiveFilter(filter)
-    velocity.current = 0
-    requestAnimationFrame(() => {
-      measure()
-      scrollToOpeningPosition()
-      applyGridTransform()
-      applyWheelTransforms()
-    })
-  }
 
   return (
     <section className={`container ${styles.section}`}>

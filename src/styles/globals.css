@@ -309,3 +309,77 @@ button {
   background-color: var(--color-gold);
   color: var(--color-obsidian);
 }
+
+/* ============================================================
+   12. CINEMATIC UTILITIES
+   ============================================================ */
+
+/* Animated underline — draws left→right on hover, exits right */
+.link-line {
+  position: relative;
+  display: inline-block;
+}
+
+.link-line::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -3px;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform var(--duration-base) var(--ease-luxury);
+}
+
+.link-line:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* Slow luxury image zoom on hover — wrap the img in .zoom-media */
+.zoom-media {
+  overflow: hidden;
+}
+
+.zoom-media img {
+  transition: transform var(--duration-crawl) var(--ease-luxury);
+  will-change: transform;
+}
+
+.zoom-media:hover img {
+  transform: scale(1.06);
+}
+
+/* Gold ghost button for dark cinematic sections */
+.btn-gold {
+  display: inline-block;
+  padding: 18px 52px;
+  border: 1px solid rgba(184, 146, 58, 0.55);
+  color: var(--color-gold);
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: var(--text-micro);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  transition:
+    background-color var(--duration-base) var(--ease-luxury),
+    color var(--duration-base) var(--ease-luxury),
+    border-color var(--duration-base) var(--ease-luxury),
+    box-shadow var(--duration-base) var(--ease-luxury);
+}
+
+.btn-gold:hover {
+  background-color: var(--color-gold);
+  border-color: var(--color-gold);
+  color: var(--color-obsidian);
+  box-shadow: 0 0 40px rgba(184, 146, 58, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link-line::after,
+  .zoom-media img {
+    transition: none;
+  }
+}

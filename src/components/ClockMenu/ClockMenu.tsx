@@ -23,6 +23,16 @@ const JEWELRY_KEYS = ['ring', 'necklaces', 'earrings', 'bracelets'] as const
 const CENTER = { left: 50, top: 92 }
 const ASPECT = 2
 
+// Normalize dome context keys (e.g. 'Rings' -> 'ring') to align perfectly with PAGE keys
+function normalizeKey(key: string): string {
+  const k = key.toLowerCase()
+  if (k === 'rings' || k === 'ring') return 'ring'
+  if (k === 'necklaces' || k === 'necklace') return 'necklaces'
+  if (k === 'earrings' || k === 'earring') return 'earrings'
+  if (k === 'bracelets' || k === 'bracelet') return 'bracelets'
+  return k
+}
+
 function aimDeg(slot: { left: number; top: number }) {
   const dx = (slot.left - CENTER.left) * ASPECT
   const dy = slot.top - CENTER.top
@@ -65,17 +75,28 @@ export default function ClockMenu({ galleryProgress }: ClockMenuProps) {
     return () => window.removeEventListener('hashchange', onHash)
   }, [controlled])
 
-  let activeKey = controlled ? categoryKey : hashKey
+  // Normalize the active category key to guarantee matches
+  let activeKey = normalizeKey(controlled ? categoryKey : hashKey)
   let aim = aimDeg(PAGES.find((p) => p.key === activeKey)?.slot ?? PAGES[2].slot)
 
   if (controlled) {
     const progress = galleryProgress ?? 0
-    const segIdx = Math.min(3, Math.max(0, Math.floor(progress * 4)))
-    const segT = (progress * 4) % 1
-    activeKey = JEWELRY_KEYS[segIdx]
-    const cur = PAGES.find((p) => p.key === JEWELRY_KEYS[segIdx])!
-    const nxt = PAGES.find((p) => p.key === JEWELRY_KEYS[(segIdx + 1) % 4])!
-    aim = lerpAim(aimDeg(cur.slot), aimDeg(nxt.slot), segT)
+    
+    // Scale progress across the 4 physical intervals of the 5 PAGES
+    const rawSeg = progress * 4
+    const segIdx = Math.min(3, Math.max(0, Math.floor(rawSeg)))
+    const segT = rawSeg - segIdx
+    
+    // Set active link visually highlighted based on closest dial slot
+    const closestIdx = Math.min(4, Math.max(0, Math.round(progress * 4)))
+    activeKey = PAGES[closestIdx].key
+    
+    const cur = PAGES[segIdx]
+    const nxt = PAGES[segIdx + 1]
+    
+    if (cur && nxt) {
+      aim = lerpAim(aimDeg(cur.slot), aimDeg(nxt.slot), segT)
+    }
   }
 
   const go = (route: string, key: string) => (e: React.MouseEvent) => {
