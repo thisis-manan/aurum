@@ -8,7 +8,7 @@
 /* Once the reveal video is fullscreen, the whole intro dissolves,
    unveiling the hero already animating underneath */
 .introFade {
-  animation: introFade 0.7s var(--ease-luxury) 0.9s both;
+  animation: introFade 1.1s var(--ease-luxury) 0.7s both;
   pointer-events: none;
 }
 
@@ -64,7 +64,7 @@
   line-height: 1.15;
   color: var(--color-ink);
   text-align: center;
-  transition: opacity 0.9s var(--ease-luxury), transform 1.4s var(--ease-luxury);
+  transition: opacity 0.35s ease-out, transform 0.9s var(--ease-luxury);
   animation: lineIn 1.1s var(--ease-luxury) both;
 }
 
