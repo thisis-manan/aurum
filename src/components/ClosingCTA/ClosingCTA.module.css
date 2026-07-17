@@ -1,0 +1,87 @@
+.cta {
+    position: relative;
+    background: var(--color-parchment);
+    padding-block: var(--space-section);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.inner {
+    position: relative;
+    z-index: 2;
+    width: min(1100px, 92%);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(60px, 10vh, 110px);
+}
+
+.reveal {
+    will-change: transform, opacity;
+}
+
+/* ---- Pull-quote ---- */
+.quote {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-style: italic;
+    font-size: clamp(18px, 2.2vw, 26px);
+    line-height: 1.7;
+    letter-spacing: 0.01em;
+    color: var(--color-ink);
+    max-width: 620px;
+    margin: 0;
+}
+
+.cite {
+    display: block;
+    margin-top: var(--space-3);
+    font-family: var(--font-body);
+    font-style: normal;
+    font-size: var(--text-micro);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--color-mist);
+}
+
+/* ---- Statement ---- */
+.headline {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: clamp(38px, 6.5vw, 96px);
+    line-height: 1.18;
+    letter-spacing: 0.03em;
+    color: var(--color-ink);
+    margin: 0;
+}
+
+.headline em {
+    font-style: italic;
+    letter-spacing: 0.01em;
+    text-transform: lowercase;
+}
+
+/* ---- CTA ---- */
+.commissionBtn {
+    display: inline-block;
+    padding: 18px 52px;
+    border: 1px solid var(--color-ink);
+    color: var(--color-ink);
+    background: transparent;
+    font-family: var(--font-body);
+    font-size: var(--text-micro);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    transition:
+        background-color var(--duration-base) var(--ease-luxury),
+        color var(--duration-base) var(--ease-luxury),
+        border-color var(--duration-base) var(--ease-luxury);
+}
+
+.commissionBtn:hover {
+    background: var(--color-ink);
+    color: var(--color-parchment);
+}

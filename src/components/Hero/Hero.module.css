@@ -9,69 +9,10 @@
     margin: 0;
 }
 
-.overlay {
+.videoWrap {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.45);
-}
-
-.content {
-    position: relative;
-    z-index: var(--z-overlay);
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: min(1100px, 90%);
-    margin: 0 auto;
-    padding-top: 120px;
-}
-
-@media (max-width: 768px) {
-    .content {
-        width: 100%;
-        padding-inline: 24px;
-    }
-}
-
-.title {
-    font-family: var(--font-display);
-    font-size: var(--text-hero);
-    font-weight: 300;
-    color: var(--text-on-dark);
-    letter-spacing: var(--tracking-display);
-    line-height: 0.95;
-    max-width: 900px;
-    margin-top: var(--space-3);
-    margin-bottom: var(--space-5);
-    max-width: 1100px;
-    text-wrap: balance;
-}
-
-@keyframes bounce {
-
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-
-    50% {
-        transform: translateY(8px);
-    }
-}
-
-.scrollIndicator {
-    margin-top: var(--space-5);
-    color: var(--text-on-dark);
-    opacity: 0.8;
-    font-size: 28px;
-    animation: bounce 1.8s var(--ease-in-out) infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .scrollIndicator {
-        animation: none;
-    }
+    will-change: transform, filter;
 }
 
 .video {
@@ -80,4 +21,122 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+/* Warm amber grade — pushes the footage toward VERO's candlelit palette */
+.grade {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 100% 80% at 50% 60%, rgba(196, 108, 28, 0.28), transparent 75%),
+        linear-gradient(to bottom, rgba(58, 28, 8, 0.35), rgba(30, 14, 4, 0.55));
+    mix-blend-mode: multiply;
+}
+
+.vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+        ellipse 130% 95% at 50% 45%,
+        transparent 50%,
+        rgba(20, 10, 4, 0.6) 100%
+    );
+    z-index: 1;
+}
+
+/* ---- Content ---- */
+.content {
+    position: relative;
+    z-index: var(--z-overlay);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(16px, 3vh, 32px);
+    width: 100%;
+    padding-inline: 24px;
+}
+
+/* The brand IS the hero */
+.wordmark {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: clamp(88px, 17vw, 280px);
+    line-height: 0.9;
+    letter-spacing: 0.02em;
+    color: var(--color-parchment);
+    white-space: nowrap;
+    text-shadow: 0 8px 60px rgba(20, 10, 4, 0.35);
+}
+
+.char {
+    display: inline-block;
+    will-change: transform, opacity;
+}
+
+/* Editorial tagline: caps with italic connectors */
+.tagline {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: clamp(16px, 2vw, 26px);
+    letter-spacing: 0.12em;
+    color: rgba(250, 248, 245, 0.88);
+    opacity: 0;
+}
+
+.tagline em {
+    font-style: italic;
+    letter-spacing: 0.03em;
+    text-transform: lowercase;
+}
+
+/* ---- Scroll hint ---- */
+.scrollHint {
+    position: absolute;
+    bottom: 36px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    z-index: var(--z-overlay);
+    opacity: 0;
+}
+
+.scrollLabel {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(250, 248, 245, 0.55);
+}
+
+.scrollLine {
+    width: 1px;
+    height: 56px;
+    background: linear-gradient(to bottom, rgba(214, 178, 106, 0.9), transparent);
+    transform-origin: top;
+    animation: breathe 2.4s var(--ease-in-out) infinite;
+}
+
+@keyframes breathe {
+    0%, 100% { transform: scaleY(0.35); opacity: 0.5; }
+    50% { transform: scaleY(1); opacity: 1; }
+}
+
+@media (max-width: 640px) {
+    .wordmark {
+        font-size: clamp(64px, 19vw, 110px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scrollLine {
+        animation: none;
+    }
+
+    .tagline,
+    .scrollHint {
+        opacity: 1;
+    }
 }

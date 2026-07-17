@@ -5,13 +5,30 @@
   overflow: hidden;
 }
 
+/* Once the reveal video is fullscreen, the whole intro dissolves,
+   unveiling the hero already animating underneath */
+.introFade {
+  animation: introFade 1s var(--ease-luxury) 1.5s both;
+  pointer-events: none;
+}
+
+@keyframes introFade {
+  to {
+    opacity: 0;
+  }
+}
+
+/* Parchment canvas — the editorial page the type sits on */
 .bg {
   position: absolute;
   inset: 0;
-  background: var(--bg-dark);
+  background: var(--color-parchment);
   z-index: 1;
 }
 
+/* Fullscreen video clipped to a small centered window.
+   The window widens slightly as loading progresses (inline style),
+   then opens to fullscreen on reveal. */
 .revealVideo {
   position: fixed;
   inset: 0;
@@ -19,136 +36,159 @@
   height: 100%;
   object-fit: cover;
   z-index: 2;
-  clip-path: inset(43% 38% 43% 38%);
   transition: clip-path 2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .revealVideoOpen {
-  clip-path: inset(0% 0% 0% 0%);
+  clip-path: inset(0% 0%) !important;
 }
 
-.previewBadge {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(calc(-50% + 26vw), 0);
-  z-index: 3;
-  background: var(--color-gold);
-  color: var(--bg-dark);
-  font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: var(--tracking-caps);
-  text-transform: uppercase;
-  padding: 6px 14px;
-  transition: opacity 0.4s ease;
-}
-
-.previewBadgeHide {
-  opacity: 0;
-  pointer-events: none;
-}
-
+/* ---- Editorial typography ---- */
 .content {
   position: relative;
-  z-index: 4;
+  z-index: 3;
   height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  transition: transform 1.6s cubic-bezier(0.16, 1, 0.3, 1);
+  gap: clamp(20px, 3.5vh, 40px);
+  pointer-events: none;
 }
 
-.contentSettle {
-  transform: translate(calc(-50vw + 64px), calc(-50vh + 40px)) scale(0.22);
-}
-
-.mark {
-  width: 44px;
-  height: 44px;
-  margin-bottom: var(--space-2);
-  flex-shrink: 0;
-}
-
-.wordmark {
+.line {
   font-family: var(--font-display);
   font-weight: 300;
-  font-size: clamp(48px, 8vw, 110px);
-  letter-spacing: 0.02em;
-  color: var(--color-parchment);
-  margin: 0;
-  line-height: 1;
-  white-space: nowrap;
+  font-size: clamp(30px, 4.6vw, 64px);
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+  color: var(--color-ink);
+  text-align: center;
+  transition: opacity 0.9s var(--ease-luxury), transform 1.4s var(--ease-luxury);
+  animation: lineIn 1.6s var(--ease-luxury) both;
 }
 
-.subtitle {
-  font-family: var(--font-body);
-  font-size: var(--text-small);
-  letter-spacing: var(--tracking-caps);
-  text-transform: uppercase;
-  color: var(--color-gold);
-  margin-top: var(--space-2);
-  transition: opacity 0.4s ease;
+.lineTop {
+  animation-delay: 0.2s;
 }
 
-.rule {
-  width: 1px;
-  height: 48px;
-  background: var(--border-on-dark);
-  margin: var(--space-4) 0;
-  transition: opacity 0.4s ease;
+.lineBottom {
+  animation-delay: 0.55s;
+}
+
+.line em {
+  font-style: italic;
+  font-weight: 300;
+  letter-spacing: 0.01em;
+  text-transform: lowercase;
+}
+
+@keyframes lineIn {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* On reveal the lines drift apart and dissolve */
+.lineExitUp {
+  opacity: 0;
+  transform: translateY(-40px);
+}
+
+.lineExitDown {
+  opacity: 0;
+  transform: translateY(40px);
+}
+
+/* Space held between the lines where the clipped video shows through */
+.swatchGap {
+  height: clamp(90px, 20vh, 200px);
+}
+
+/* ---- Progress: counter above a hairline track ---- */
+.progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
+  padding: 0 clamp(24px, 4vw, 64px) clamp(20px, 3vh, 36px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  transition: opacity 0.5s ease;
 }
 
 .counter {
-  font-family: var(--font-body);
+  font-family: var(--font-display);
+  font-weight: 300;
   font-variant-numeric: tabular-nums;
-  font-size: var(--text-small);
-  letter-spacing: var(--tracking-caps);
-  color: var(--color-parchment);
-  margin: 0;
-  min-width: 2ch;
-  text-align: center;
-  transition: opacity 0.4s ease;
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  color: var(--color-ink);
+}
+
+.track {
+  width: 100%;
+  height: 1px;
+  background: rgba(15, 15, 15, 0.12);
+  overflow: hidden;
+}
+
+.fill {
+  width: 100%;
+  height: 100%;
+  background: var(--color-ink);
+  transform-origin: left;
+  transition: transform 0.2s linear;
 }
 
 .hide {
   opacity: 0;
+  pointer-events: none;
 }
 
 .skip {
   position: absolute;
   right: var(--space-4);
-  bottom: var(--space-4);
+  top: var(--space-4);
   z-index: 4;
   background: none;
   border: none;
   font-family: var(--font-body);
-  font-size: var(--text-small);
+  font-size: var(--text-micro);
   letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
-  color: var(--border-on-dark);
+  color: var(--color-mist);
   cursor: pointer;
   padding: var(--space-2);
   transition: opacity 0.4s ease, color 0.2s ease;
 }
 
 .skip:hover {
-  color: var(--color-parchment);
+  color: var(--color-ink);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .content,
-  .revealVideo {
+  .revealVideo,
+  .line {
     transition: none;
+    animation: none;
   }
 }
 
 @media (max-width: 640px) {
-  .revealVideo {
-    clip-path: inset(45% 15% 45% 15%);
+  .line {
+    font-size: clamp(24px, 7.5vw, 34px);
   }
-  .previewBadge {
-    transform: translate(calc(-50% + 60px), 0);
+
+  .swatchGap {
+    height: clamp(70px, 16vh, 130px);
   }
 }

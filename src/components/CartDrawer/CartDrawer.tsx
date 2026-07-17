@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Minus, Plus, ShoppingCart } from "lucide-react";
 import gsap from "gsap";
 import { useCart } from "./CartContext";
