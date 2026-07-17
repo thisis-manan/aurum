@@ -58,7 +58,7 @@ export default function Nav() {
     >
       <div className={styles.inner}>
         <a
-          href="/"
+          href="#/"
           className={styles.logo}
           onClick={closeMenu}
         >
@@ -66,9 +66,9 @@ export default function Nav() {
         </a>
 
         <div className={styles.links}>
+          <a href="#/shop">Shop</a>
           <a href="#">Rings</a>
           <a href="#">Necklaces</a>
-          <a href="#">Bracelets</a>
           <a href="#">Earrings</a>
         </div>
 
@@ -97,16 +97,16 @@ export default function Nav() {
           menuOpen ? styles.mobileMenuOpen : ''
         }`}
       >
+        <a href="#/shop" onClick={closeMenu}>
+          Shop
+        </a>
+
         <a href="#" onClick={closeMenu}>
           Rings
         </a>
 
         <a href="#" onClick={closeMenu}>
           Necklaces
-        </a>
-
-        <a href="#" onClick={closeMenu}>
-          Bracelets
         </a>
 
         <a href="#" onClick={closeMenu}>
