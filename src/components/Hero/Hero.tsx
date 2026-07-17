@@ -37,10 +37,12 @@ export default function Hero({ ready = true }: { ready?: boolean }) {
       // ---- Entrance ----
       const tl = gsap.timeline({ delay: 0.3 })
 
+      // keep the video near its natural state so the crossfade from the
+      // intro's fullscreen video lands seamlessly — just a soft settle
       tl.fromTo(
         videoWrapRef.current,
-        { scale: 1.12, filter: 'brightness(0.4)' },
-        { scale: 1, filter: 'brightness(1)', duration: 2.2, ease: 'power2.out' }
+        { scale: 1.05, filter: 'brightness(0.85)' },
+        { scale: 1, filter: 'brightness(1)', duration: 2.6, ease: 'power2.out' }
       )
 
       if (chars) {

@@ -112,9 +112,8 @@ export default function Intro({
   if (phase === 'done') return null
 
   const revealing = phase === 'revealing'
-  // the clipped video window grows gently with progress
-  const insetY = 44 - (count / 100) * 5 // 44% → 39%
-  const insetX = 47 - (count / 100) * 4 // 47% → 43%
+  const insetY = 44 - (count / 100) * 5
+  const insetX = 47 - (count / 100) * 4
 
   return (
     <div
@@ -123,8 +122,6 @@ export default function Intro({
     >
       <div className={styles.bg} />
 
-      {/* Fullscreen video, clipped to a small centered window that
-          matches the inline swatch, then opened on reveal */}
       <video
         className={`${styles.revealVideo} ${revealing ? styles.revealVideoOpen : ''}`}
         src="/videos/hero-loop.mp4"
@@ -140,7 +137,6 @@ export default function Intro({
           WHERE <em>your</em> GOLD
         </p>
 
-        {/* spacer holds the gap where the clipped video shows through */}
         <div className={styles.swatchGap} />
 
         <p className={`${styles.line} ${styles.lineBottom} ${revealing ? styles.lineExitDown : ''}`}>
